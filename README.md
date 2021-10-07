@@ -1,5 +1,6 @@
-# scrape
-A object oriented coding language based off of c++, c# and javascript
+# ScrapeLang
+An object oriented programming language based on C++, C#, and Javascript.
 
-# file extenshion
-.scp .scrape
+# File Extensions
+## .srp
+## .scrape
