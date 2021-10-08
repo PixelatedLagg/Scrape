@@ -1,0 +1,17 @@
+Comments
+//Comments
+
+https://docs.google.com/document/d/1shvJrrhxqVyz11nJ7GUOzxIZiCsSoyvEO3zYcB4nZEk/edit
+
+data types:
+
+integers (nullable)
+int name = value;
+
+strings (nullable)
+string name = "value";
+
+(optional) print statement:
+print(value);
+
+also a way to run the script (compiler)

@@ -1,0 +1,19 @@
+using System;
+
+// this is a namespace
+namespace Program
+{
+    class ExampleClass
+    {
+        method Main()
+        {
+            int example = ExampleInt(1);
+        }
+        int ExampleInt(int number)
+        {
+            number--;
+            number++;
+            return number;
+        }
+    }
+}
