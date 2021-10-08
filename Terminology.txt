@@ -1,0 +1,71 @@
+Logic
+
+If shorthand:
+if (condition) (value) {
+	//code here
+}
+
+If regular:
+if (condition) {
+Value1 {
+	//code here
+	}
+	Value2 {
+		//code here
+	}
+}
+
+Comparison Operators:
+== equal
+!= not equal
+! not same
+|| or
+&& and
+> greater than
+< less than
+>= greater than or equal to
+<= less than or equal to 
+
+Math Operators:
+++ add one
+-- subtract one
++= add to current value
+-= subtract from current value
+*= multiply to current value
+/= divide from current value
++ add
+- subtract
+* multiply
+/ divide
+
+
+Function:
+method name(argType arg)  {
+	return;
+}
+
+
+Variables:
+Modifier(s) Type Name = Value;
+Modifier(s) Type Name; (without value)
+
+Letter Types:
+String
+Char
+
+Numeric types:
+Int
+Float
+
+Other:
+Bool
+
+Group Types:
+List
+
+Modifiers:
+Public
+Private
+Internal
+Static
+Const
