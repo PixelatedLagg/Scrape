@@ -2,6 +2,7 @@
 
 #include "Diagnostics.h"
 #include "Objects.h"
+#include "Parser.h"
 
 void StopParsing()
 {
