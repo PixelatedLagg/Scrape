@@ -6,6 +6,9 @@ Data types:
 Integers (nullable)
 int [name] = [value];
 
+Variable Logic (non-nullable)
+[value] [operator] [value]; 
+
 Strings (nullable)
 string [name] = [value];
 
@@ -14,3 +17,10 @@ Standard Library:
 
 Print Method
 print([value]);
+
+
+Errors:
+
+Invalid type error - 1
+Null reference error - 2
+Argument error - 3

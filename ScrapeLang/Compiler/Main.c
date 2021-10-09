@@ -1,33 +1,13 @@
+#define FILE_EXTENSION1 .srp
+#define FILE_EXTENSION2 .scrape
+
 #include <stdio.h>
-#define FILE_EXTENSION .srp
-#define FILE_EXTENSION .scrape
 
-void storeVar(char, char);
+#include "Parser.h"
+#include "Diagnostics.h"
 
-int Main()
+int main()
 {
-    storeVar('st', 'test');
+    StartParser();
     return 0;
-}
-
-void storeVar(char Type, char Value)
-{
-    switch (Type)
-    {
-        case 'str':
-            //add string
-            break;
-
-        case 'int': 
-        {
-            //add integer
-            break;
-        }
-        default: 
-        {
-            //error
-            printf("%s is not a valid type!", Type);
-            break;
-        }
-    }
 }
