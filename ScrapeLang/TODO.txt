@@ -1,17 +1,16 @@
 Comments
-//Comments
+//[comment]
 
-https://docs.google.com/document/d/1shvJrrhxqVyz11nJ7GUOzxIZiCsSoyvEO3zYcB4nZEk/edit
+Data types:
 
-data types:
+Integers (nullable)
+int [name] = [value];
 
-integers (nullable)
-int name = value;
+Strings (nullable)
+string [name] = [value];
 
-strings (nullable)
-string name = "value";
 
-(optional) print statement:
-print(value);
+Standard Library:
 
-also a way to run the script (compiler)
+Print Method
+print([value]);
