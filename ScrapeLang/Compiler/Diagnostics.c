@@ -1,12 +1,10 @@
 #include <stdio.h>
 #include "Diagnostics.h"
 
-typedef enum 
+void Log(char _error[], Object _object)
 {
-    Error = 0,
-    Warning = 1,
-    Message = 2,
-} Severity;
+    printf("%s \n Object: name \"%s\" type \"%s\"", _error, _object._name, _object._type);
+}
 
 typedef enum
 {

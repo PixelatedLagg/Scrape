@@ -7,7 +7,6 @@
 #include "Objects.h"
 
 void StopParsing();
-void ParsingMessage();
 void StartParser();
 
 #endif

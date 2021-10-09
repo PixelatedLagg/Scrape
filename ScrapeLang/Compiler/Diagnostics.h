@@ -4,12 +4,9 @@
 #include <stdio.h>
 #include <string.h>
 
-typedef enum 
-{
-    Error = 0,
-    Warning = 1,
-    Message = 2,
-} Severity;
+#include "Objects.h"
+
+void Log(char _error[], Object _object);
 
 typedef enum
 {
