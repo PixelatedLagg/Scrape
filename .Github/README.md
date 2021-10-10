@@ -1,8 +1,2 @@
-<img id="logoText" src="Images/Full.png"/>
-
-# Scrape
-An object oriented programming language based on C++, C#, and Javascript.
-
-# File Extensions
-## .srp
-## .scrape
+# Srape Has Moved
+The project is now here; https://github.com/PerlaOS/Scrape
