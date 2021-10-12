@@ -13,6 +13,7 @@ namespace Program
         {
             number--;
             number++;
+            number = 3;
             return number;
         }
     }
