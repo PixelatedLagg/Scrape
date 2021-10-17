@@ -1,11 +1,10 @@
-﻿using System;
+using System;
 
 namespace Scrape
 {
     class Program
-    {
-        static void Main(string[] args)
-        {
+ 		 {
+  p      static void Main(string[]        {
             Console.WriteLine("Hello World!");
         }
     }

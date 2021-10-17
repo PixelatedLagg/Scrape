@@ -1,0 +1,1 @@
+mcs ScrapeLang/Compiler/*.cs -out:scrape && mono scrape
