@@ -84,7 +84,7 @@ namespace BFAsm
         }
 	}
 
-	public class BFLexer {
+	public LexerFLexer {
 		/// <summary>
 		/// Holds the code being tokenized.
 		/// </summary>
@@ -230,7 +230,7 @@ namespace BFAsm
 			return tok;
         }
 
-		public BFLexer(string source)
+		public Lexer(string source)
 		{
 			Source = source;
 		}
