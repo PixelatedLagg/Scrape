@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace BFAsm
+namespace Scrape
 {
 	public class ParseException : Exception {
 		private string _Message;
@@ -84,7 +84,7 @@ namespace BFAsm
         }
 	}
 
-	public LexerFLexer {
+	public class Lexer {
 		/// <summary>
 		/// Holds the code being tokenized.
 		/// </summary>
@@ -170,7 +170,7 @@ namespace BFAsm
 			return str;
 		}
 
-		public BFToken GetToken() {
+		public Token GetToken() {
 			SkipSpace();
 
 			char c = Peek();
@@ -184,13 +184,13 @@ namespace BFAsm
 			}
 
 			if (IsAlpha(c)) {
-				return new BFToken(TokenType.Identifier, Line, Column, ReadWhile(IsAlpha));
+				return new Token(TokenType.Identifier, Line, Column, ReadWhile(IsAlpha));
 			}
 
 			if (c == '"') {
 				Get();
 
-				BFToken tok = new BFToken(TokenType.String, Line, Column, ReadUntil(ch => ch == '"', "\""));
+				Token tok = new Token(TokenType.String, Line, Column, ReadUntil(ch => ch == '"', "\""));
 
 				Get();
 
@@ -200,27 +200,26 @@ namespace BFAsm
 			if (c == ':') {
 				Get();
 
-				return new BFToken(TokenType.Colon, Line, Column, ":");
+				return new Token(TokenType.Colon, Line, Column, ":");
 			}
 
 			if (c == ',') {
 				Get();
 
-				return new BFToken(Tokeype.Comma, Line, Column, ",");
-			}	}
-
+				return new Token(Tokeype.Comma, Line, Column, ",");
+			}	
 			if (IsDigit(c)) {
-				return new BFToken(TokenType.Integer, Line, Column, int.Parse(ReadWhile(IsDigit)));
+				return new Token(TokenType.Integer, Line, Column, int.Parse(ReadWhile(IsDigit)));
             }
 
 			if (IsOp(c)) {
-				return new BFToken(TokenType.Operator, Line, Column, ReadWhile(IsOp));
+				return new Token(TokenType.Operator, Line, Column, ReadWhile(IsOp));
 			}
 
-			return new BFToken(TokenType.EOF, Line, Column, null);
+			return new Token(TokenType.EOF, Line, Column, null);
         }
 
-		public BFToken PeekToken() {
+		public Token PeekToken() {
 			int pos = Position;
 
 			BFToken tok = GetToken();
