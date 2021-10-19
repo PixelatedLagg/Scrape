@@ -1,0 +1,16 @@
+/home/pixelatedlagg/Desktop/Scrape-lang/obj/Debug/net5.0/Scrape-lang.csproj.AssemblyReference.cache
+/home/pixelatedlagg/Desktop/Scrape-lang/obj/Debug/net5.0/Scrape-lang.GeneratedMSBuildEditorConfig.editorconfig
+/home/pixelatedlagg/Desktop/Scrape-lang/obj/Debug/net5.0/Scrape-lang.AssemblyInfoInputs.cache
+/home/pixelatedlagg/Desktop/Scrape-lang/obj/Debug/net5.0/Scrape-lang.AssemblyInfo.cs
+/home/pixelatedlagg/Desktop/Scrape-lang/obj/Debug/net5.0/Scrape-lang.csproj.CoreCompileInputs.cache
+/home/pixelatedlagg/Desktop/Scrape-lang/bin/Debug/net5.0/Scrape-lang
+/home/pixelatedlagg/Desktop/Scrape-lang/bin/Debug/net5.0/Scrape-lang.deps.json
+/home/pixelatedlagg/Desktop/Scrape-lang/bin/Debug/net5.0/Scrape-lang.runtimeconfig.json
+/home/pixelatedlagg/Desktop/Scrape-lang/bin/Debug/net5.0/Scrape-lang.runtimeconfig.dev.json
+/home/pixelatedlagg/Desktop/Scrape-lang/bin/Debug/net5.0/Scrape-lang.dll
+/home/pixelatedlagg/Desktop/Scrape-lang/bin/Debug/net5.0/ref/Scrape-lang.dll
+/home/pixelatedlagg/Desktop/Scrape-lang/bin/Debug/net5.0/Scrape-lang.pdb
+/home/pixelatedlagg/Desktop/Scrape-lang/obj/Debug/net5.0/Scrape-lang.dll
+/home/pixelatedlagg/Desktop/Scrape-lang/obj/Debug/net5.0/ref/Scrape-lang.dll
+/home/pixelatedlagg/Desktop/Scrape-lang/obj/Debug/net5.0/Scrape-lang.pdb
+/home/pixelatedlagg/Desktop/Scrape-lang/obj/Debug/net5.0/Scrape-lang.genruntimeconfig.cache

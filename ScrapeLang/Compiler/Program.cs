@@ -6,7 +6,7 @@ namespace Scrape
     {
         static void Main(string[] args)
         {    
-            Console.WriteLine("Hello World!");
+            Scrape.File.GetFile();
         }
     }
 }

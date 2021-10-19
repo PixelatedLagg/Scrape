@@ -10,7 +10,7 @@ namespace Scrape
 		public override string Message { get { return _Message; } }
 
 
-		public ParseException(BFToken tok, string message) {
+		public ParseException(Token tok, string message) {
 			_Message = $"({tok.Line}, {tok.Column}): {message}";
 		}
 
@@ -19,7 +19,7 @@ namespace Scrape
         }
     }
 
-	public enum BFTokenType {
+	public enum TokenType {
 		Identifier,
 		Keyword,
 		Integer,
@@ -32,8 +32,8 @@ namespace Scrape
 		EOF
 	}
 
-	public class BFToken {
-		public BFTokenType Type;
+	public class Token {
+		public TokenType Type;
 
 		public int Line;
 
@@ -42,30 +42,30 @@ namespace Scrape
 		private object Value;
 		
 		/// <summary>
-		/// Returns the value of the BFToken as an integer.
+		/// Returns the value of the Token as an integer.
 		/// </summary>
 		/// <returns><see cref="int"/></returns>
 		public int Integer() {
-			if (Type != BFTokenType.Integer) {
-				throw new ParseException(Line, Column, "BFToken value is not an integer!");
+			if (Type != TokenType.Integer) {
+				throw new ParseException(Line, Column, "Token value is not an integer!");
 			}
 
 			return (int) Value;
 		}
 
 		/// <summary>
-		/// Returns the value of the BFToken as a string.
+		/// Returns the value of the Token as a string.
 		/// </summary>
 		/// <returns><see cref="string"/></returns>
 		public string String() {
-			/*if (Type != BFTokenType.Identifier && Type != BFTokenType.String) {
-				throw new ParseException(Line, Column, "BFToken value is not a string!");
+			/*if (Type != TokenType.Identifier && Type != TokenType.String) {
+				throw new ParseException(Line, Column, "Token value is not a string!");
 			}*/
 
 			return Value.ToString();
 		}
 
-		public bool Is(BFTokenType type, object value) {
+		public bool Is(TokenType type, object value) {
 			return Type == type && Value.ToString() == value.ToString();
         }
 
@@ -73,7 +73,7 @@ namespace Scrape
 			return $"({Line}, {Column}): {Type}, {Value}";
         }
 
-        public BFToken(BFTokenType type, int line, int column, object value) {
+        public Token(TokenType type, int line, int column, object value) {
 			Type = type;
 
 			Line = line;
@@ -86,7 +86,7 @@ namespace Scrape
 
 	public class Lexer {
 		/// <summary>
-		/// Holds the code being BFTokenized.
+		/// Holds the code being Tokenized.
 		/// </summary>
 		private string Source;
 
@@ -170,7 +170,7 @@ namespace Scrape
 			return str;
 		}
 
-		public BFToken GetBFToken() {
+		public Token GetToken() {
 			SkipSpace();
 
 			char c = Peek();
@@ -184,13 +184,13 @@ namespace Scrape
 			}
 
 			if (IsAlpha(c)) {
-				return new BFToken(BFTokenType.Identifier, Line, Column, ReadWhile(IsAlpha));
+				return new Token(TokenType.Identifier, Line, Column, ReadWhile(IsAlpha));
 			}
 
 			if (c == '"') {
 				Get();
 
-				BFToken tok = new BFToken(BFTokenType.String, Line, Column, ReadUntil(ch => ch == '"', "\""));
+				Token tok = new Token(TokenType.String, Line, Column, ReadUntil(ch => ch == '"', "\""));
 
 				Get();
 
@@ -200,29 +200,29 @@ namespace Scrape
 			if (c == ':') {
 				Get();
 
-				return new BFToken(BFTokenType.Colon, Line, Column, ":");
+				return new Token(TokenType.Colon, Line, Column, ":");
 			}
 
 			if (c == ',') {
 				Get();
 
-				return new BFToken(BFTokenType.Comma, Line, Column, ",");
+				return new Token(TokenType.Comma, Line, Column, ",");
 			}	
 			if (IsDigit(c)) {
-				return new BFToken(BFTokenType.Integer, Line, Column, int.Parse(ReadWhile(IsDigit)));
+				return new Token(TokenType.Integer, Line, Column, int.Parse(ReadWhile(IsDigit)));
             }
 
 			if (IsOp(c)) {
-				return new BFToken(BFTokenType.Operator, Line, Column, ReadWhile(IsOp));
+				return new Token(TokenType.Operator, Line, Column, ReadWhile(IsOp));
 			}
 
-			return new BFToken(BFTokenType.EOF, Line, Column, null);
+			return new Token(TokenType.EOF, Line, Column, null);
         }
 
-		public BFToken PeekBFToken() {
+		public Token PeekToken() {
 			int pos = Position;
 
-			BFToken tok = GetBFToken();
+			Token tok = GetToken();
 
 			Position = pos;
 

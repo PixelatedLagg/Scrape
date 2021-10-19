@@ -4,14 +4,14 @@ using System.IO;
 
 namespace Scrape
 {
-    static class File
+    static public class File
  	{
-        static void GetFile()
+        static public void GetFile()
         {
             string[] files = Directory.GetFiles(Environment.CurrentDirectory, "*.srp").Concat(Directory.GetFiles(Environment.CurrentDirectory, "*.scrape")).ToArray();
             if (files.Length == 0)
             {
-                //throw error for no runnable files
+                throw new CompileError("No files found to compile!");
             }
             foreach (string file in files)
             {
