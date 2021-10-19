@@ -10,16 +10,16 @@ namespace Scrape {
 		public ExprType Type;
 		
 		public Expr Left;
-		public Token Op;
+		public BFToken Op;
 		public Expr Right;
 
-		public Token Value;
+		public BFToken Value;
 
 		public Expr() {
 			
 		}
 
-		public Expr(Token val) {
+		public Expr(BFToken val) {
 			Type = ExprType.Literal;
 			Value = val;
 		}
@@ -30,7 +30,7 @@ namespace Scrape {
 
 		// Unfinished
 		public Expr Primary() {
-			Token tok = Source.GetToken();
+			BFToken tok = Source.GetBFToken();
 
 			return new Expr(tok);
 		}

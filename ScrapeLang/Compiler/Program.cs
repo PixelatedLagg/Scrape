@@ -2,7 +2,11 @@ using System;
 
 namespace Scrape
 {
-    c Progro  {{ pramu     statiic Mainvod (st[])ing     C     Console.WriteLine("Hello World!");
+     class Program
+    {
+        static void Main(string[] args)
+        {    
+            Console.WriteLine("Hello World!");
         }
     }
 }
