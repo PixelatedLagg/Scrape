@@ -4,21 +4,6 @@ using System.Text;
 
 namespace Scrape
 {
-	public class ParseException : Exception {
-		private string _Message;
-
-		public override string Message { get { return _Message; } }
-
-
-		public ParseException(Token tok, string message) {
-			_Message = $"({tok.Line}, {tok.Column}): {message}";
-		}
-
-		public ParseException(int line, int column, string message) {
-			_Message = $"({line}, {column}): {message}";
-        }
-    }
-
 	public enum TokenType {
 		Identifier,
 		Keyword,
