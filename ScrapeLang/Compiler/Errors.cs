@@ -2,6 +2,7 @@ using System.Linq;
 using System;
 using System.IO;
 using System.Runtime.Serialization;
+
 namespace Scrape
 {
     public class SyntaxError : Exception

@@ -1,20 +1,19 @@
-using System;
+using StandardLib; //referencing namespace
 
-// this is a namespace
-namespace Program
+namespace Program //namespace
 {
-    class ExampleClass
+    class ExampleClass //class
     {
-        method Main()
+        method Main() //method
         {
-            int example = ExampleInt(1);
+            int example = ExampleInt(1); //int assigned return value from int method
         }
-        int ExampleInt(int number)
+        int ExampleInt(int number) //int method with parameter
         {
-            number--;
-            number++;
-            number = 3;
-            return number;
+            number--; //-- operator
+            number++; //++ operator
+            number = 3; //assigning the int a value
+            return number; //return the value
         }
     }
 }

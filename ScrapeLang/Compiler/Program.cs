@@ -1,12 +1,10 @@
 using System;
+using Scrape.Cli;
 
 namespace Scrape
 {
-     class Program
+    class Program
     {
-        static void Main(string[] args)
-        {    
-            Scrape.File.GetFile();
-        }
+        static void Main(string[] args) => new Input().Start();
     }
 }
