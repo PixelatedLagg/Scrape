@@ -160,7 +160,7 @@ namespace Scrape
 
 			char c = Peek();
 
-			if (c == '/') {
+			if (c == '/' && Source[Position + 1] == '/') {
 				while (Peek() != '\n') {
 					Get();
 				}
