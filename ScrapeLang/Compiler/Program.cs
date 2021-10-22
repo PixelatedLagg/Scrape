@@ -5,6 +5,6 @@ namespace Scrape
 {
     class Program
     {
-        static void Main(string[] args) => new Input().Start();
+        static void Main(string[] args) => new Input().Start(args);
     }
 }
