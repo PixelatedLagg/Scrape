@@ -6,9 +6,9 @@ namespace Scrape
     class Program
     {
         static void Main(string[] args) {
-			Parser prs = new Parser("10 * 6 / 2 / 2");
+			Parser prs = new Parser("int thirty = 15 * 2");
 
-			Console.WriteLine(prs.Expression());
+			Console.WriteLine(prs.Statement());
 		} // => new Input().Start(args);
     }
 }

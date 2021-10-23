@@ -13,6 +13,8 @@ namespace Scrape
 		String,
 		LParen,
 		RParen,
+		LBracket,
+		RBracket,
 		Operator,
 		EOF
 	}
@@ -188,6 +190,30 @@ namespace Scrape
 				return new Token(TokenType.Colon, Line, Column, ":");
 			}
 
+			if (c == '(') {
+				Get();
+
+				return new Token(TokenType.LParen, Line, Column, ")");
+			}
+
+			if (c == ')') {
+				Get();
+
+				return new Token(TokenType.RParen, Line, Column, ")");
+			}
+
+			if (c == '{') {
+				Get();
+
+				return new Token(TokenType.LBracket, Line, Column, "}");
+			}
+
+			if (c == '}') {
+				Get();
+
+				return new Token(TokenType.RBracket, Line, Column, "}");
+			}
+
 			if (c == ',') {
 				Get();
 
@@ -204,12 +230,24 @@ namespace Scrape
 			return new Token(TokenType.EOF, Line, Column, null);
         }
 
-		public Token PeekToken() {
+		public Token PeekToken(int count = 1) {
 			int pos = Position;
+
+			int line = Line;
+
+			int col = Column;
 
 			Token tok = GetToken();
 
+			for (int i = 1; i < count; i++) {
+				tok = GetToken();
+			}
+
 			Position = pos;
+
+			Line = line;
+
+			Column = col;
 
 			return tok;
         }

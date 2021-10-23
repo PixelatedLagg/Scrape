@@ -50,6 +50,53 @@ namespace Scrape {
 		}
 	}
 
+	public enum StmtType {
+		VarDef,
+		If,
+		Expression
+	}
+
+	// This could use inheritance with derived classes, but is the mess of checking types and casting worth it?
+	public class Stmt {
+		public StmtType Type;
+
+		public string TypeName;
+
+		public string Name;
+
+		public Expr Condition;
+
+		public Expr Expression;
+
+		public List<Stmt> Body;
+
+		public override string ToString() {
+			if (Type == StmtType.Expression) {
+				return Expression.ToString();
+			}
+
+			if (Type == StmtType.VarDef) {
+				return $"{TypeName} {Name} = {Expression.ToString()}";
+			}
+
+			string str = $"if ({Condition.ToString()}) {{\n";
+
+			foreach (Stmt st in Body) {
+				str += '\t' + st.ToString() + '\n';
+			}
+
+			return str + '}';
+		}
+
+		public Stmt() {}
+
+		public Stmt(Expr expr) {
+			Type = StmtType.Expression;
+
+			Expression = expr;
+		}
+	}
+
 	public class Parser {
 		private Lexer Source;
 
@@ -78,9 +125,91 @@ namespace Scrape {
 		private Stack<OperatorDescriptor> Operators = new Stack<OperatorDescriptor>();
 
 		private Dictionary<string, OperatorDescriptor> OperatorDefs = new Dictionary<string, OperatorDescriptor> {
+			{ "+", new OperatorDescriptor("+", 8, true) },
+			{ "-", new OperatorDescriptor("-", 8, true) },
 			{ "*", new OperatorDescriptor("*", 7, true) },
 			{ "/", new OperatorDescriptor("/", 6, true) }
 		};
+
+		public Stmt Statement() {
+			Stmt result = new Stmt();
+
+			if (Source.PeekToken().Is(TokenType.Identifier, "if")) {
+				Source.GetToken();
+
+				if (Source.PeekToken().Type != TokenType.LParen) {
+					throw new SyntaxError("Expected [(] after [if]", Source.GetToken());
+				}
+
+				Source.GetToken();
+
+				Expr cond = Expression();
+
+				if (Source.PeekToken().Type != TokenType.RParen) {
+					throw new SyntaxError("Expected [)] after expression", Source.PeekToken());
+				}
+
+				Source.GetToken();
+
+				result.Type = StmtType.If;
+
+				result.Condition = cond;
+
+				if (Source.PeekToken().Type != TokenType.LBracket) {
+					throw new SyntaxError("Expected [{] after [)]", Source.PeekToken());
+				}
+
+				result.Body = Body();
+
+				return result;
+			}
+
+			if (Source.PeekToken(3).Is(TokenType.Operator, "=")) {
+				Token type = Source.GetToken();
+
+				if (type.Type != TokenType.Identifier) {
+					throw new SyntaxError("Expected identifier", type);
+				}
+
+				Token name = Source.GetToken();
+
+				if (name.Type != TokenType.Identifier) {
+					throw new SyntaxError("Expected identifier", name);
+				}
+
+				Source.GetToken(); // =
+
+				result.Type = StmtType.VarDef;
+
+				result.TypeName = type.String();
+
+				result.Name = name.String();
+
+				result.Expression = Expression();
+
+				return result;
+			}
+
+			return new Stmt(Expression());
+		}
+
+		public List<Stmt> Body() {
+			Token start = Source.GetToken(); // {
+			
+			List<Stmt> statements = new List<Stmt>();
+			
+			while (Source.PeekToken().Type != TokenType.RBracket) {
+				if (Source.PeekToken().Type == TokenType.EOF) {
+					throw new SyntaxError("Expected [}] before end of file.", start);
+				}
+
+				statements.Add(Statement());
+			}
+
+			Source.GetToken(); // }
+
+			return statements;
+		}
 
 		public Expr Expression() {
 			Operands.Push(Primary());
@@ -133,6 +262,18 @@ namespace Scrape {
 		// Unfinished
 		public Expr Primary() {
 			Token tok = Source.GetToken();
+
+			if (tok.Type == TokenType.LParen) {
+				Expr expr = Expression();
+
+				if (Source.PeekToken().Type != TokenType.RParen) {
+					throw new SyntaxError("Expected [)] after expression.", tok);
+				}
+
+				Source.GetToken();
+
+				return expr;
+			}
 
 			return new Expr(tok);
 		}
