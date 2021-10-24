@@ -4,6 +4,7 @@ using System.Collections.Generic;
 namespace Scrape {
 	public enum ExprType {
 		Literal,
+		Call,
 		Binary
 	}
 
@@ -18,16 +19,28 @@ namespace Scrape {
 
 		public Token Value;
 
+		public Expr Subject;
+
+		public List<Expr> Args;
+
 		public override string ToString() {
 			if (Type == ExprType.Literal) {
+				if (Value.Type == TokenType.String) {
+					return $"\"{Value.String()}\"";
+				}
+
 				return Value.String();
 			}
 
-			string left = Left.Type == ExprType.Binary ? $"({Left})" : $"{Left}";
+			if (Type == ExprType.Call) {
+				return $"{Subject.ToString()}({String.Join(", ", Args)})";
+			}
 
-			string right = Right.Type == ExprType.Binary ? $"({Right})" : $"{Right}";
+			string left = Left.Type == ExprType.Binary && Left.Op.String() != "." ? $"({Left})" : $"{Left}";
 
-			return $"{left} {Op.String()} {right}";
+			string right = Right.Type == ExprType.Binary && Right.Op.String() != "." ? $"({Right})" : $"{Right}";
+
+			return Op.String() == "." ? $"{left}{Op.String()}{right}" : $"{left} {Op.String()} {right}";
 		}
 
 		public Expr() {
@@ -37,6 +50,14 @@ namespace Scrape {
 		public Expr(Token val) {
 			Type = ExprType.Literal;
 			Value = val;
+		}
+
+		public Expr(Expr subject, List<Expr> args) {
+			Type = ExprType.Call;
+
+			Subject = subject;
+
+			Args = args;
 		}
 
 		public Expr(Expr left, Token op, Expr right) {
@@ -53,12 +74,15 @@ namespace Scrape {
 	public enum StmtType {
 		VarDef,
 		If,
-		Expression
+		Expression,
+		Method
 	}
 
 	// This could use inheritance with derived classes, but is the mess of checking types and casting worth it?
 	public class Stmt {
 		public StmtType Type;
+
+		public List<string> Modifiers = new List<string>();
 
 		public string TypeName;
 
@@ -79,6 +103,16 @@ namespace Scrape {
 				return $"{TypeName} {Name} = {Expression.ToString()}";
 			}
 
+			if (Type == StmtType.Method) {
+				string mstr = $"{TypeName} {Name}() {{\n";
+
+				foreach (Stmt st in Body) {
+					mstr += '\t' + st.ToString() + '\n';
+				}
+
+				return mstr + '}';
+			}
+
 			string str = $"if ({Condition.ToString()}) {{\n";
 
 			foreach (Stmt st in Body) {
@@ -95,6 +129,132 @@ namespace Scrape {
 
 			Expression = expr;
 		}
+	}
+
+	public enum ClassMemberType {
+		Field,
+		Method
+	}
+
+	// Class to represent class members, needs to hold the name of the class it belongs to, and the type of member, as well as body if it is a method(list of Stmt classes)
+	public class ClassMember {
+		public ClassMemberType Type;
+
+		public string Name;
+
+		public string TypeName;
+
+		public List<string> Modifiers = new List<string>();
+
+		public Expr Expression;
+
+		public List<Stmt> Body;
+
+		public override string ToString() {
+			// Convert member to string
+			if (Type == ClassMemberType.Method) {
+				string mstr = $"{TypeName} {Name}() {{\n";
+
+				TopLevel.IndentLevel++;
+
+				foreach (Stmt st in Body) {
+					// Indent with static variable from TopLevel class
+					for (int i = 0; i < TopLevel.IndentLevel; i++) {
+						mstr += '\t';
+					}
+
+					mstr += st.ToString() + '\n';
+				}
+
+				TopLevel.IndentLevel--;
+
+				for (int i = 0; i < TopLevel.IndentLevel; i++) {
+					mstr += '\t';
+				}
+
+				return mstr + '}';
+			}
+
+			if (Type == ClassMemberType.Field) {
+				return $"{TypeName} {Name} = {Expression.ToString()}";
+			}
+
+			return "";
+		}
+
+		public ClassMember() {}
+	}
+
+	public enum TopLevelType {
+		Namespace,
+		Class
+	}
+
+	public class TopLevel {
+		public TopLevelType Type;
+
+		public string Name;
+
+		public List<string> Modifiers = new List<string>();
+
+		public List<ClassMember> ClassData = new List<ClassMember>();
+
+		public List<TopLevel> NamespaceData = new List<TopLevel>();
+
+		public static int IndentLevel = 0;
+
+		public override string ToString() {
+			if (Type == TopLevelType.Namespace) {
+				string str = $"namespace {Name} {{\n";
+
+				IndentLevel++;
+
+				foreach (TopLevel tl in NamespaceData) {
+					for (int i = 0; i < IndentLevel; i++) {
+						str += '\t';
+					}
+
+					str += tl.ToString() + '\n';
+				}
+
+				IndentLevel--;
+
+				// Indent the bracket
+				for (int i = 0; i < IndentLevel; i++) {
+					str += '\t';
+				}
+
+				return str + '}';
+			}
+
+			if (Type == TopLevelType.Class) {
+				string str = $"class {Name} {{\n";
+
+				IndentLevel++;
+
+				foreach (ClassMember cm in ClassData) {
+					// Add correct indentation level to class member dependent on current indentation
+					for (int i = 0; i < IndentLevel; i++) {
+						str += '\t';
+					}
+
+					str += cm.ToString() + '\n';
+				}
+
+				IndentLevel--;
+
+				// Indent the bracket
+				for (int i = 0; i < IndentLevel; i++) {
+					str += '\t';
+				}
+
+				return str + '}';
+			}
+
+			return "";
+		}
+
+		public TopLevel() {}
 	}
 
 	public class Parser {
@@ -128,8 +288,73 @@ namespace Scrape {
 			{ "+", new OperatorDescriptor("+", 8, true) },
 			{ "-", new OperatorDescriptor("-", 8, true) },
 			{ "*", new OperatorDescriptor("*", 7, true) },
-			{ "/", new OperatorDescriptor("/", 6, true) }
+			{ "/", new OperatorDescriptor("/", 6, true) },
+			{ ".", new OperatorDescriptor(".", 5, true) }
 		};
+
+		private List<string> Modifiers = new List<string>() { "public", "private", "static" };
+
+		public TopLevel TopLevel() {
+			TopLevel result = new TopLevel();
+
+			// Get modifiers
+			while (Source.PeekToken().Type == TokenType.Identifier && Modifiers.Contains(Source.PeekToken().String())) {
+				result.Modifiers.Add(Source.GetToken().String());
+			}
+
+			// Namespace
+			if (Source.PeekToken().Is(TokenType.Identifier, "namespace")) {
+				Source.GetToken(); // namespace
+
+				result.Type = TopLevelType.Namespace;
+
+				result.Name = Source.GetToken().String();
+
+				if (Source.PeekToken().Type != TokenType.LBracket) {
+					throw new SyntaxError("Expected [{] after namespace definition", Source.GetToken());
+				}
+
+				Source.GetToken(); // {
+
+				// Get namespace contents
+				while (Source.PeekToken().Type != TokenType.RBracket) {
+					if (Source.PeekToken().Type == TokenType.EOF) {
+						throw new SyntaxError("Expected [}] after namespace body", Source.GetToken());
+					}
+
+					result.NamespaceData.Add(TopLevel());
+				}
+				
+				Source.GetToken(); // }
+
+				return result;
+			}
+
+			if (Source.PeekToken().Is(TokenType.Identifier, "class")) {
+				Source.GetToken();
+
+				Token name = Source.GetToken();
+
+				if (name.Type != TokenType.Identifier) {
+					throw new SyntaxError("Expected identifier after class definition", name);
+				}
+
+				result.Type = TopLevelType.Class;
+
+				result.Name = name.String();
+
+				// Error if next token is not a {
+				if (Source.PeekToken().Type != TokenType.LBracket) {
+					throw new SyntaxError("Expected [{] after class definition", Source.GetToken());
+				}
+
+				result.ClassData = ClassBody();
+
+				return result;
+			}
+
+			return null;
+		}
 
 		public Stmt Statement() {
 			Stmt result = new Stmt();
@@ -161,6 +386,10 @@ namespace Scrape {
 
 				result.Body = Body();
 
+				if (Source.GetToken().Type != TokenType.Semicolon) {
+					throw new SyntaxError("Expected [;] after statement", Source.GetToken());
+				}
+
 				return result;
 			}
 
@@ -187,10 +416,175 @@ namespace Scrape {
 
 				result.Expression = Expression();
 
+				if (Source.GetToken().Type != TokenType.Semicolon) {
+					throw new SyntaxError("Expected [;] after statement", Source.GetToken());
+				}
+
 				return result;
 			}
 
-			return new Stmt(Expression());
+			List<string> modifiers = new List<string>();
+
+			if (Source.PeekToken().Type == TokenType.Identifier && Modifiers.Contains(Source.PeekToken().String())) {
+				modifiers.Add(Source.GetToken().String()); // Add multiple modifier support later
+			}
+
+			if (Source.PeekToken(3).Is(TokenType.LParen, "(")) {
+				Token tname = Source.GetToken();
+
+				if (tname.Type != TokenType.Identifier) {
+					throw new SyntaxError("Expected identifier", tname);
+				}
+				
+				Token name = Source.GetToken();
+
+				if (name.Type != TokenType.Identifier) {
+					throw new SyntaxError("Expected identifier", name);
+				}
+
+				if (Source.PeekToken().Is(TokenType.LParen, "(")) {
+					result.Type = StmtType.Method;
+
+					result.TypeName = tname.String();
+
+					result.Name = name.String();
+
+					result.Modifiers = modifiers;
+
+					Source.GetToken(); // (
+
+					if (! Source.PeekToken().Is(TokenType.RParen, ")")) {
+						throw new SyntaxError("Expected [)] after argument list", Source.GetToken());
+					}
+
+					Source.GetToken(); // )
+
+					if (! Source.PeekToken().Is(TokenType.LBracket, "{")) {
+						throw new SyntaxError("Expected [{] after argument list", Source.GetToken());
+					}
+
+					result.Body = Body();
+
+					if (Source.GetToken().Type != TokenType.Semicolon) {
+						throw new SyntaxError("Expected [;] after statement", Source.GetToken());
+					}
+
+					return result;
+				}
+			}
+
+			Expr expr = Expression();
+
+			// Check if next token is a ( and if it is, handle the expression as a method call
+			/*if (Source.PeekToken().Is(TokenType.LParen, "(")) {
+				Source.GetToken(); // (
+
+				List<Expr> Args = new List<Expr>();
+
+				if (! Source.PeekToken().Is(TokenType.RParen, ")")) {
+					Args.Add(Expression());
+
+					while (Source.PeekToken().Is(TokenType.Comma, ",")) {
+						Source.GetToken(); // ,
+
+						Args.Add(Expression());
+					}
+				}
+
+				if (! Source.PeekToken().Is(TokenType.RParen, ")")) {
+					throw new SyntaxError("Expected [)] after argument list", Source.GetToken());
+				}
+
+				Source.GetToken(); // )
+
+				if (Source.GetToken().Type != TokenType.Semicolon) {
+					throw new SyntaxError("Expected [;] after statement", Source.GetToken());
+				}
+
+				return new Stmt(new Expr(expr, Args));
+			}*/
+
+			if (Source.GetToken().Type != TokenType.Semicolon) {
+				throw new SyntaxError("Expected [;] after statement", Source.GetToken());
+			}
+
+			return new Stmt(expr);
+		}
+
+		public List<ClassMember> ClassBody() {
+			Source.GetToken(); // {
+
+			List<ClassMember> result = new List<ClassMember>();
+
+			while (Source.PeekToken().Type != TokenType.RBracket) {
+				result.Add(ClassMember());
+			}
+
+			Source.GetToken(); // }
+
+			return result;
+		}
+
+		public ClassMember ClassMember() {
+			ClassMember result = new ClassMember();
+
+			// Check if next tokens are a modifier and add it to modifiers of result
+			while (Source.PeekToken().Type == TokenType.Identifier && Modifiers.Contains(Source.PeekToken().String())) {
+				result.Modifiers.Add(Source.GetToken().String());
+			}
+
+			// type name = value
+			if (Source.PeekToken().Type == TokenType.Identifier) {
+				Token type = Source.GetToken();
+
+				Token name = Source.GetToken();
+
+				if (name.Type != TokenType.Identifier) {
+					throw new SyntaxError("Expected identifier", name);
+				}
+
+				if (Source.PeekToken().Is(TokenType.Operator, "=")) {
+					Source.GetToken(); // =
+
+					result.Type = ClassMemberType.Field;
+
+					result.TypeName = type.String();
+
+					result.Name = name.String();
+
+					result.Expression = Expression();
+
+					return result;
+				}
+
+				if (Source.PeekToken().Is(TokenType.LParen, "(")) {
+					result.Type = ClassMemberType.Method;
+
+					result.TypeName = type.String();
+
+					result.Name = name.String();
+
+					Source.GetToken(); // (
+
+					// Args here
+
+					if (! Source.PeekToken().Is(TokenType.RParen, ")")) {
+						throw new SyntaxError("Expected [)] after argument list", Source.GetToken());
+					}
+
+					Source.GetToken(); // )
+
+					if (! Source.PeekToken().Is(TokenType.LBracket, "{")) {
+						throw new SyntaxError("Expected [{] after argument list", Source.GetToken());
+					}
+
+					result.Body = Body();
+
+					return result;
+				}
+			}
+
+			return result;
 		}
 
 		public List<Stmt> Body() {
@@ -240,7 +634,29 @@ namespace Scrape {
 				Operands.Push(new Expr(Operands.Pop(), Operators.Pop().ToToken(), right));
 			}
 
-			return Operands.Pop();
+			Expr expr = Operands.Pop();
+
+			if (Source.PeekToken().Type == TokenType.LParen) {
+				Source.GetToken(); // (
+
+				List<Expr> args = new List<Expr>();
+
+				if (! Source.PeekToken().Is(TokenType.RParen, ")")) {
+					args.Add(Expression());
+
+					while (Source.PeekToken().Is(TokenType.Comma, ",")) {
+						Source.GetToken(); // ,
+
+						args.Add(Expression());
+					}
+				}
+
+				Source.GetToken(); // )
+
+				return new Expr(expr, args);
+			}
+
+			return expr;
 		}
 
 		/*public Expr Div() {

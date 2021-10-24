@@ -1,0 +1,13 @@
+namespace NAME {
+   public class Test {
+       public static void Func() {
+           
+       }
+       
+       public static int Main() {
+           int i = 15; 
+           
+           Test.Func();
+       }
+   }
+}

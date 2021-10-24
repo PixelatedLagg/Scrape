@@ -9,6 +9,7 @@ namespace Scrape
 		Keyword,
 		Integer,
 		Colon,
+		Semicolon,
 		Comma,
 		String,
 		LParen,
@@ -184,16 +185,28 @@ namespace Scrape
 				return tok;
 			}
 
+			if (c == '.') {
+				Get();
+
+				return new Token(TokenType.Operator, Line, Column, ".");
+			}
+
 			if (c == ':') {
 				Get();
 
 				return new Token(TokenType.Colon, Line, Column, ":");
 			}
 
+			if (c == ';') {
+				Get();
+
+				return new Token(TokenType.Semicolon, Line, Column, ";");
+			}
+
 			if (c == '(') {
 				Get();
 
-				return new Token(TokenType.LParen, Line, Column, ")");
+				return new Token(TokenType.LParen, Line, Column, "(");
 			}
 
 			if (c == ')') {
@@ -205,7 +218,7 @@ namespace Scrape
 			if (c == '{') {
 				Get();
 
-				return new Token(TokenType.LBracket, Line, Column, "}");
+				return new Token(TokenType.LBracket, Line, Column, "{");
 			}
 
 			if (c == '}') {
