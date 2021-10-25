@@ -1,0 +1,6 @@
+scrape
+ScrapeLang/bin/*
+ScrapeLang/obj/*
+ScrapeLang/generated.cpp
+ScrapeRuntime/bin/*
+ScrapeRuntime/obj/*

@@ -8,7 +8,11 @@ namespace Scrape
     class Program
     {
         static void Main(string[] args) {
-            Compiler compiler = new Compiler(File.ReadAllText("Program.srp"));
+            Compiler compiler;
+
+            using (StreamReader reader = new StreamReader("Program.srp")) {
+                compiler = new Compiler(reader.ReadToEnd());
+            }
 
             compiler.Compile();
 
