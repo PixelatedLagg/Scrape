@@ -5,7 +5,8 @@ namespace Scrape {
 	public enum ExprType {
 		Literal,
 		Call,
-		Binary
+		Binary,
+		New
 	}
 
 	public class Expr {
@@ -74,6 +75,7 @@ namespace Scrape {
 	public enum StmtType {
 		VarDef,
 		If,
+		Return,
 		Expression,
 		Method
 	}
@@ -97,6 +99,10 @@ namespace Scrape {
 		public override string ToString() {
 			if (Type == StmtType.Expression) {
 				return Expression.ToString();
+			}
+
+			if (Type == StmtType.Return) {
+				return $"return {Expression.ToString()}";
 			}
 
 			if (Type == StmtType.VarDef) {
@@ -150,10 +156,20 @@ namespace Scrape {
 
 		public List<Stmt> Body;
 
+		public List<string> ArgNames = new List<string>();
+
+		public List<Expr> ArgTypes = new List<Expr>();
+
 		public override string ToString() {
 			// Convert member to string
 			if (Type == ClassMemberType.Method) {
-				string mstr = $"{TypeName} {Name}() {{\n";
+				string mstr = $"{TypeName} {Name}(";
+				
+				mstr += "{{\n";
+
+				for (int i = 0; i < ArgNames.Count; i++) {
+					mstr += $"\t{ArgTypes[i].ToString()} {ArgNames[i]}{(i == ArgNames.Count - 1 ? "" : ", ")}\n";
+				}
 
 				TopLevel.IndentLevel++;
 
@@ -187,13 +203,16 @@ namespace Scrape {
 
 	public enum TopLevelType {
 		Namespace,
-		Class
+		Class,
+		Using
 	}
 
 	public class TopLevel {
 		public TopLevelType Type;
 
 		public string Name;
+
+		public Expr Path; // using Path.To.Namespace;
 
 		public List<string> Modifiers = new List<string>();
 
@@ -251,6 +270,10 @@ namespace Scrape {
 				return str + '}';
 			}
 
+			if (Type == TopLevelType.Using) {
+				return $"using {Path.ToString()};";
+			}
+
 			return "";
 		}
 
@@ -285,6 +308,7 @@ namespace Scrape {
 		private Stack<OperatorDescriptor> Operators = new Stack<OperatorDescriptor>();
 
 		private Dictionary<string, OperatorDescriptor> OperatorDefs = new Dictionary<string, OperatorDescriptor> {
+			{ "==", new OperatorDescriptor("==", 9, true) },
 			{ "+", new OperatorDescriptor("+", 8, true) },
 			{ "-", new OperatorDescriptor("-", 8, true) },
 			{ "*", new OperatorDescriptor("*", 7, true) },
@@ -353,11 +377,43 @@ namespace Scrape {
 				return result;
 			}
 
+			if (Source.PeekToken().Is(TokenType.Identifier, "using")) {
+				Source.GetToken();
+
+				result.Type = TopLevelType.Using;
+
+				result.Path = Expression();
+
+				if (Source.PeekToken().Type != TokenType.Semicolon) {
+					throw new SyntaxError("Expected [;] after using statement", Source.GetToken());
+				}
+
+				Source.GetToken(); // ;
+
+				return result;
+			}
+
 			return null;
 		}
 
 		public Stmt Statement() {
 			Stmt result = new Stmt();
+
+			if (Source.PeekToken().Is(TokenType.Identifier, "return")) {
+				Source.GetToken(); // return
+
+				result.Type = StmtType.Return;
+
+				result.Expression = Expression();
+
+				if (Source.PeekToken().Type != TokenType.Semicolon) {
+					throw new SyntaxError("Expected [;] after return statement", Source.GetToken());
+				}
+
+				Source.GetToken(); // ;
+
+				return result;
+			}
 
 			if (Source.PeekToken().Is(TokenType.Identifier, "if")) {
 				Source.GetToken();
@@ -385,10 +441,6 @@ namespace Scrape {
 				}
 
 				result.Body = Body();
-
-				if (Source.GetToken().Type != TokenType.Semicolon) {
-					throw new SyntaxError("Expected [;] after statement", Source.GetToken());
-				}
 
 				return result;
 			}
@@ -564,12 +616,30 @@ namespace Scrape {
 
 					result.Name = name.String();
 
-					Source.GetToken(); // (
+					Token open = Source.GetToken(); // (
 
-					// Args here
+					while (! Source.PeekToken().Is(TokenType.RParen, ")")) {
+						if (Source.PeekToken().Type == TokenType.EOF) {
+							throw new SyntaxError("Expected [)] after argument list", open);
+						}
 
-					if (! Source.PeekToken().Is(TokenType.RParen, ")")) {
-						throw new SyntaxError("Expected [)] after argument list", Source.GetToken());
+						// Add name = type
+						
+						Expr tname = Expression();
+
+						Token name2 = Source.GetToken();
+
+						if (name2.Type != TokenType.Identifier) {
+							throw new SyntaxError("Expected identifier", name);
+						}
+
+						result.ArgNames.Add(name2.String());
+
+						result.ArgTypes.Add(tname);
+
+						if (Source.PeekToken().Is(TokenType.Comma, ",")) {
+							Source.GetToken(); // ,
+						}
 					}
 
 					Source.GetToken(); // )
@@ -605,7 +675,7 @@ namespace Scrape {
 			return statements;
 		}
 
-		public Expr Expression() {
+		public Expr Expression(bool dot = false) {
 			Operands.Push(Primary());
 
 			while (Source.PeekToken().Type == TokenType.Operator && OperatorDefs.ContainsKey(Source.PeekToken().String())) {
@@ -623,6 +693,10 @@ namespace Scrape {
 
 				Source.GetToken();
 
+				if (dot && op.Op != ".") {
+					throw new SyntaxError("Expected [.] after identifier", Source.GetToken());
+				}
+
 				Operators.Push(op);
 
 				Operands.Push(Primary());
@@ -636,7 +710,7 @@ namespace Scrape {
 
 			Expr expr = Operands.Pop();
 
-			if (Source.PeekToken().Type == TokenType.LParen) {
+			if (Source.PeekToken().Type == TokenType.LParen && ! dot) {
 				Source.GetToken(); // (
 
 				List<Expr> args = new List<Expr>();
@@ -645,6 +719,10 @@ namespace Scrape {
 					args.Add(Expression());
 
 					while (Source.PeekToken().Is(TokenType.Comma, ",")) {
+						if (Source.PeekToken().Type == TokenType.EOF) {
+							throw new SyntaxError("Expected [)] after argument list", Source.GetToken());
+						}
+
 						Source.GetToken(); // ,
 
 						args.Add(Expression());
@@ -678,6 +756,42 @@ namespace Scrape {
 		// Unfinished
 		public Expr Primary() {
 			Token tok = Source.GetToken();
+
+			if (tok.Is(TokenType.Identifier, "new")) {
+				if (Source.PeekToken().Type != TokenType.Identifier) {
+					throw new SyntaxError("Expected identifier", Source.GetToken());
+				}
+
+				Expr subject = Expression(true);
+
+				List<Expr> args = new List<Expr>();
+
+				if (Source.PeekToken().Is(TokenType.LParen, "(")) {
+					Source.GetToken(); // (
+
+					if (! Source.PeekToken().Is(TokenType.RParen, ")")) {
+						args.Add(Expression());
+
+						while (Source.PeekToken().Is(TokenType.Comma, ",")) {
+							if (Source.PeekToken().Type == TokenType.EOF) {
+								throw new SyntaxError("Expected [)] after argument list", Source.GetToken());
+							}
+
+							Source.GetToken(); // ,
+
+							args.Add(Expression());
+						}
+					}
+
+					Source.GetToken(); // )
+				}
+
+				Expr expr = new Expr(subject, args);
+
+				expr.Type = ExprType.New;
+
+				return expr;
+			}
 
 			if (tok.Type == TokenType.LParen) {
 				Expr expr = Expression();

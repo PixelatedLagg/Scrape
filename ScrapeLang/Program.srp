@@ -1,13 +1,19 @@
 namespace NAME {
    public class Test {
-       public static void Func() {
-           
+       public static void Fact(int i) {
+           if (i == 1) {
+               return 1;
+           }
+
+           return i + Fact(i - 1);
        }
        
        public static int Main() {
-           int i = 15; 
+           int i = 15;
+
+           Test tst = new Test();
            
-           Test.Func();
+           Test.Fact(6);
        }
    }
 }

@@ -9,7 +9,13 @@ namespace Scrape.Code.Generation {
 
         public bool Static;
 
+        public bool Namespace;
+
         public bool Method;
+
+        public bool Class;
+
+        public Scope Scope;
     }
 
     public enum ScopeType {
@@ -20,15 +26,35 @@ namespace Scrape.Code.Generation {
 
     // Contain type declarations
     public class Scope {
+        public string Name;
+
         public ScopeType Type;
 
         public Scope Parent;
+
+        public Dictionary<string, TypeInfo> Namespaces = new Dictionary<string, TypeInfo>();
 
         public Dictionary<string, TypeInfo> Methods = new Dictionary<string, TypeInfo>();
 
         public Dictionary<string, TypeInfo> Variables = new Dictionary<string, TypeInfo>();
 
-        public Dictionary<string, Scope> Classes = new Dictionary<string, Scope>();
+        public Dictionary<string, TypeInfo> Classes = new Dictionary<string, TypeInfo>();
+
+        public void DefineNamespace(string name, TypeInfo info) {
+            Namespaces[name] = info;
+        }
+
+        public TypeInfo GetNamespace(string name) {
+            if (Namespaces.ContainsKey(name)) {
+                return Namespaces[name];
+            }
+
+            if (Parent != null) {
+                return Parent.GetNamespace(name);
+            }
+            
+            return null;
+        }
 
         public void DefineMethod(string name, TypeInfo info) {
             Methods[name] = info;
@@ -62,17 +88,41 @@ namespace Scrape.Code.Generation {
             return null;
         }
 
-        public void DefineClass(string name, Scope scope) {
-            Classes[name] = scope;
+        public void DefineClass(string name, TypeInfo info) {
+            Classes[name] = info;
         }
 
-        public Scope GetClass(string name) {
+        public TypeInfo GetClass(string name) {
             if (Classes.ContainsKey(name)) {
                 return Classes[name];
             }
 
             if (Parent != null) {
                 return Parent.GetClass(name);
+            }
+
+            return null;
+        }
+
+        public TypeInfo Get(string name) {
+            if (Variables.ContainsKey(name)) {
+                return Variables[name];
+            }
+
+            if (Methods.ContainsKey(name)) {
+                return Methods[name];
+            }
+
+            if (Namespaces.ContainsKey(name)) {
+                return Namespaces[name];
+            }
+
+            if (Classes.ContainsKey(name)) {
+                return Classes[name];
+            }
+
+            if (Parent != null) {
+                return Parent.Get(name);
             }
 
             return null;
@@ -97,9 +147,51 @@ namespace Scrape.Code.Generation {
 
         public string Output = "";
 
+        public Scope EntryContext;
+
         public ClassMember Entry;
 
         public Scope Context = new Scope(ScopeType.Namespace);
+
+        public TypeInfo DeduceType(Expr expr) {
+            if (expr.Type == ExprType.Literal) {
+                string type = "error";
+
+                if (expr.Value.Type == TokenType.String) {
+                    type = "string";
+                } else if (expr.Value.Type == TokenType.Integer) {
+                    type = "int";
+                } else if (expr.Value.String() == "true" || expr.Value.String() == "false") {
+                    type = "bool";
+                }
+
+                if (expr.Value.Type == TokenType.Identifier) {
+                    return Context.Get(expr.Value.String());
+                }
+
+                return new TypeInfo {
+                    Name = type
+                };
+            }
+
+            if (expr.Type == ExprType.New) {
+                return new TypeInfo {
+                    Name = Expression(expr.Subject)
+                };
+            }
+
+            if (expr.Type == ExprType.Call) {
+                TypeInfo method = Context.GetMethod(expr.Value.String());
+
+                if (method == null) {
+                    throw new Exception("Method not found: " + expr.Value.String());
+                }
+
+                return method;
+            }
+
+            return null;
+        }
 
         public string Indent() {
             string result = "";
@@ -118,6 +210,20 @@ namespace Scrape.Code.Generation {
 
             IndentLevel++;
 
+            Context = new Scope(Context, ScopeType.Namespace);
+
+            Context.Name = top.Name;
+
+            Context.Parent.DefineNamespace(top.Name, new TypeInfo {
+                Name = top.Name,
+
+                Static = true,
+
+                Namespace = true,
+
+                Scope = Context
+            });
+
             foreach (TopLevel structure in top.NamespaceData) {
                 result += Indent();
 
@@ -129,6 +235,8 @@ namespace Scrape.Code.Generation {
                     result += Class(structure);
                 }
             }
+
+            Context = Context.Parent;
 
             IndentLevel--;
 
@@ -154,7 +262,17 @@ namespace Scrape.Code.Generation {
                 }
             }
 
-            result += member.TypeName + " " + member.Name + $"() {{\n";
+            result += member.TypeName + " " + member.Name + "(";
+
+            for (int i = 0; i < member.ArgNames.Count; i++) {
+                result += member.ArgTypes[i] + " " + member.ArgNames[i];
+
+                if (i < member.ArgNames.Count - 1) {
+                    result += ", ";
+                }
+            }
+                
+            result += ") {\n";
 
             IndentLevel++;
 
@@ -188,26 +306,38 @@ namespace Scrape.Code.Generation {
                 result += Expression(st.Expression) + ";\n";
             }
 
+            if (st.Type == StmtType.Return) {
+                result += "return " + Expression(st.Expression) + ";\n";
+            }
+
             if (st.Type == StmtType.If) {
-                result += "if (" + Expression(st.Expression) + ") {\n";
+                result += "if (" + Expression(st.Condition) + ") {\n";
 
                 IndentLevel++;
 
                 foreach (Stmt stmt in st.Body) {
-                    Indent();
+                    result += Indent();
 
-                    Statement(stmt);
+                    result += Statement(stmt);
                 }
 
                 IndentLevel--;
 
-                Indent();
+                result += Indent();
 
-                result += "}\n";
+                result += "}\n\n";
             }
 
             if (st.Type == StmtType.VarDef) {
-                result += st.TypeName + " " + st.Name + " = " + Expression(st.Expression) + ";\n";
+                TypeInfo type = Context.GetClass(st.TypeName);
+
+                string tname = st.TypeName;
+
+                if (type != null) {
+                    tname = type.Name + '*';
+                }
+
+                result += tname + " " + st.Name + " = " + Expression(st.Expression) + ";\n";
             }
 
             return result;
@@ -222,12 +352,23 @@ namespace Scrape.Code.Generation {
 
             Context = new Scope(Context, ScopeType.Class);
 
-            Context.Parent.DefineClass(top.Name, Context);
+            Context.Name = $"{Context.Parent.Name}::{top.Name}";
+
+            Context.Parent.DefineClass(top.Name, new TypeInfo {
+                Name = top.Name,
+
+                Static = true,
+
+                Class = true,
+
+                Scope = Context
+            });
 
             foreach (ClassMember member in top.ClassData) {
                 if (member.Name == "Main") {
                     member.Name = "main";
                     
+                    EntryContext = Context;
                     Entry = member;
 
                     continue;
@@ -254,17 +395,33 @@ namespace Scrape.Code.Generation {
         public string Expression(Expr expr) {
             string result = "";
 
+            if (expr.Type == ExprType.New) {
+                result += "new " + Expression(expr.Subject) + "(";
+
+                for (int i = 0; i < expr.Args.Count; i++) {
+                    result += Expression(expr.Args[i]);
+
+                    if (i < expr.Args.Count - 1) {
+                        result += ", ";
+                    }
+                }
+
+                result += ")";
+            }
+
             if (expr.Type == ExprType.Binary) {
                 result += Expression(expr.Left);
 
-                Scope cl = Context.GetClass(expr.Left.Value.String());
+                Scope cl = Context.Get(expr.Left.Value.String())?.Scope;
+
+                TypeInfo righttype = cl?.Get(expr.Right.Value.String());
 
                 // C++ uses :: instead of . for static members
-                if (expr.Op.String() == "." && cl != null && cl.GetMethod(expr.Right.Value.String()).Static) {
+                if (expr.Op.String() == "." && cl != null && righttype != null && righttype.Static) {
                     result += "::";
                 } else {
                     if (expr.Op.String() == ".") {
-                        result += $"{expr.Op.String()}";
+                        result += $"->";
                     }
                     else {
                         result += $" {expr.Op.String()} ";
@@ -282,7 +439,7 @@ namespace Scrape.Code.Generation {
                 for (int i = 0; i < expr.Args.Count; i++) {
                     result += Expression(expr.Args[i]);
 
-                    if (i < expr.Args.Count) {
+                    if (i < expr.Args.Count - 1) {
                         result += ", ";
                     }
                 }
@@ -311,8 +468,16 @@ namespace Scrape.Code.Generation {
                     Output += Class(top);
                 }
 
+                if (top.Type == TopLevelType.Using) {
+                    Output += "using namespace " + Expression(top.Path) + ";\n\n";
+                }
+
                 top = Parser.TopLevel();
             }
+
+            Output += $"using namespace {EntryContext.Parent.Name};\n\n";
+
+            Context = EntryContext;
 
             Output += Method(Entry);
         }

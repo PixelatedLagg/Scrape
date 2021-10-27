@@ -16,7 +16,6 @@ namespace Scrape
 
             compiler.Compile();
 
-            // Write gen.Namespace(prs.TopLevel()) to generated.cpp
             using (StreamWriter writer = new StreamWriter("generated.cpp")) {
                 writer.Write(compiler.Output);
             }
