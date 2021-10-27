@@ -1,11 +1,19 @@
+namespace Standard {
+    class Console {
+        public extern static void WriteLine(string text);
+    }
+}
+
+using Standard;
+
 namespace NAME {
    public class Test {
-       public static void Fact(int i) {
+       public static int Fact(int i) {
            if (i == 1) {
                return 1;
            }
 
-           return i + Fact(i - 1);
+           return i * Fact(i - 1);
        }
        
        public static int Main() {
@@ -14,6 +22,8 @@ namespace NAME {
            Test tst = new Test();
            
            Test.Fact(6);
+
+           Console.WriteLine("Yay!");
        }
    }
 }

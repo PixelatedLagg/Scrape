@@ -153,6 +153,8 @@ namespace Scrape.Code.Generation {
 
         public Scope Context = new Scope(ScopeType.Namespace);
 
+        public List<Scope> Used = new List<Scope>();
+
         public TypeInfo DeduceType(Expr expr) {
             if (expr.Type == ExprType.Literal) {
                 string type = "error";
@@ -256,6 +258,18 @@ namespace Scrape.Code.Generation {
         public string Method(ClassMember member) {
             string result = "";
 
+            if (member.Modifiers.Contains("extern") || member.Modifiers.Contains("abstract")) {
+                Context.DefineMethod(member.Name, new TypeInfo {
+                    Name = member.TypeName,
+
+                    Static = member.Modifiers.Contains("static"),
+
+                    Method = true
+                });
+
+                return "";
+            }
+
             foreach (string mod in member.Modifiers) {
                 if (mod == "static" && member.Name != "main") {
                     result += "static ";
@@ -331,6 +345,16 @@ namespace Scrape.Code.Generation {
             if (st.Type == StmtType.VarDef) {
                 TypeInfo type = Context.GetClass(st.TypeName);
 
+                if (type == null) {
+                    foreach (Scope ns in Used) {
+                        type = ns.GetClass(st.TypeName);
+
+                        if (type != null) {
+                            break;
+                        }
+                    }
+                }
+
                 string tname = st.TypeName;
 
                 if (type != null) {
@@ -364,6 +388,8 @@ namespace Scrape.Code.Generation {
                 Scope = Context
             });
 
+            bool emit = false;
+
             foreach (ClassMember member in top.ClassData) {
                 if (member.Name == "Main") {
                     member.Name = "main";
@@ -374,10 +400,16 @@ namespace Scrape.Code.Generation {
                     continue;
                 }
 
+                if (! member.Modifiers.Contains("abstract") && ! member.Modifiers.Contains("extern")) {
+                    emit = true;
+                }
+
                 result += Indent();
 
                 if (member.Type == ClassMemberType.Field) {
                     result += Field(member);
+
+                    continue;
                 }
                 
                 result += Method(member);
@@ -389,7 +421,7 @@ namespace Scrape.Code.Generation {
 
             Context = Context.Parent;
             
-            return result;
+            return emit ? result : "";
         }
 
         public string Expression(Expr expr) {
@@ -413,6 +445,16 @@ namespace Scrape.Code.Generation {
                 result += Expression(expr.Left);
 
                 Scope cl = Context.Get(expr.Left.Value.String())?.Scope;
+
+                if (cl == null) {
+                    foreach (Scope ns in Used) {
+                        cl = ns.Get(expr.Left.Value.String())?.Scope;
+
+                        if (cl != null) {
+                            break;
+                        }
+                    }
+                }
 
                 TypeInfo righttype = cl?.Get(expr.Right.Value.String());
 
@@ -450,6 +492,12 @@ namespace Scrape.Code.Generation {
             }
 
             if (expr.Type == ExprType.Literal) {
+                if (expr.Value.Type == TokenType.String) {
+                    result += "\"" + expr.Value.String() + "\"";
+
+                    return result;
+                }
+
                 result += expr.Value.String();
             }
 
@@ -458,6 +506,8 @@ namespace Scrape.Code.Generation {
 
         public void Compile() {
             TopLevel top = Parser.TopLevel();
+
+            Output += "#include <io.hpp>\n\n";
 
             while (top != null) {
                 if (top.Type == TopLevelType.Namespace) {
@@ -469,7 +519,13 @@ namespace Scrape.Code.Generation {
                 }
 
                 if (top.Type == TopLevelType.Using) {
-                    Output += "using namespace " + Expression(top.Path) + ";\n\n";
+                    string path = Expression(top.Path);
+
+                    if (Context.GetNamespace(path) != null) {
+                        Used.Add(Context.GetNamespace(path).Scope);
+                    }
+
+                    Output += "using namespace " + path + ";\n\n";
                 }
 
                 top = Parser.TopLevel();

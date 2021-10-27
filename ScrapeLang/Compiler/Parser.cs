@@ -316,7 +316,7 @@ namespace Scrape {
 			{ ".", new OperatorDescriptor(".", 5, true) }
 		};
 
-		private List<string> Modifiers = new List<string>() { "public", "private", "static" };
+		private List<string> Modifiers = new List<string>() { "public", "private", "static", "abstract", "extern" };
 
 		public TopLevel TopLevel() {
 			TopLevel result = new TopLevel();
@@ -644,11 +644,22 @@ namespace Scrape {
 
 					Source.GetToken(); // )
 
-					if (! Source.PeekToken().Is(TokenType.LBracket, "{")) {
+					bool nobody = result.Modifiers.Contains("abstract") || result.Modifiers.Contains("extern");
+
+					if (! nobody && ! Source.PeekToken().Is(TokenType.LBracket, "{")) {
 						throw new SyntaxError("Expected [{] after argument list", Source.GetToken());
 					}
 
-					result.Body = Body();
+					if (! nobody) {
+						result.Body = Body();
+					}
+					else {
+						if (Source.PeekToken().Type != TokenType.Semicolon) {
+							throw new SyntaxError("Expected [;] after extern function", Source.GetToken());
+						}
+
+						Source.GetToken(); // ;
+					}
 
 					return result;
 				}
