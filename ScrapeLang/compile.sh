@@ -1,0 +1,1 @@
+dotnet run && cd ../ScrapeRuntime && make && cd ../ScrapeLang && g++ generated.cpp ../ScrapeRuntime/bin/libscrape.so -I../ScrapeRuntime/Include -o output && clear && ./output

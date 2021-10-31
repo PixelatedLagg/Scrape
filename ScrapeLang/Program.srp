@@ -1,6 +1,10 @@
-namespace Standard {
-    class Console {
+namespace Standard 
+{
+    class Console 
+    {
         public extern static void WriteLine(string text);
+        public extern static void Write(string text);
+        public extern static string ReadLine();
     }
 }
 
@@ -17,13 +21,8 @@ namespace NAME {
        }
        
        public static int Main() {
-           int i = 15;
-
-           Test tst = new Test();
-           
-           Test.Fact(6);
-
-           Console.WriteLine("Yay!");
+           Console.WriteLine("Enter something!");
+           Console.WriteLine(Console.ReadLine());
        }
    }
 }
