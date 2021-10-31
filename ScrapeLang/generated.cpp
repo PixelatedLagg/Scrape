@@ -1,7 +1,7 @@
 #include <io.hpp>
 
 namespace Standard {
-	}
+			}
 
 using namespace Standard;
 
@@ -24,7 +24,6 @@ namespace NAME {
 using namespace NAME;
 
 int main() {
-	Console::WriteLine("Enter something!");
-	Console::WriteLine(Console::ReadLine());
+	Console::WriteLine("test");
 }
 

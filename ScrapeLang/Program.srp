@@ -2,9 +2,23 @@ namespace Standard
 {
     class Console 
     {
-        public extern static void WriteLine(string text);
-        public extern static void Write(string text);
+        public extern static void WriteLine(string stringtext);
+        public extern static void WriteLine(int inttext);
+        public extern static void Write(string stringtext);
+        public extern static void Write(int inttext);
         public extern static string ReadLine();
+    }
+    class Convert
+    {
+        public extern static string ToString(int value);
+        public extern static string ToString(float value);
+        public extern static string ToString(double value);
+        public extern static string ToString(char value);
+        public extern static string ToString(bool value);
+    }
+    class Random
+    {
+        public extern static string Int(int min, int max);
     }
 }
 
@@ -21,8 +35,7 @@ namespace NAME {
        }
        
        public static int Main() {
-           Console.WriteLine("Enter something!");
-           Console.WriteLine(Console.ReadLine());
+           Console.WriteLine("test");
        }
    }
 }
