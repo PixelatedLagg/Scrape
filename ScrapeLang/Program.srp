@@ -19,6 +19,7 @@ namespace Standard
     class Random
     {
         public extern static string Int(int min, int max);
+        public extern static string String(int chars);
     }
 }
 
@@ -26,16 +27,11 @@ using Standard;
 
 namespace NAME {
    public class Test {
-       public static int Fact(int i) {
-           if (i == 1) {
-               return 1;
-           }
-
-           return i * Fact(i - 1);
-       }
-       
        public static int Main() {
-           Console.WriteLine("test");
+           Console.WriteLine("Hello World!");
+           Console.WriteLine(Random.String(0, 5));
+           Console.WriteLine(Random.String(1, 5));
+           Console.WriteLine(Random.String(2, 5));
        }
    }
 }

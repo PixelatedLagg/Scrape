@@ -22,27 +22,3 @@ std::string Standard::Console::ReadLine()
     std::cin >> output;
     return output;
 }
-std::string Standard::Convert::ToString(int value)
-{
-    return std::to_string(value);
-}
-std::string Standard::Convert::ToString(float value)
-{
-    return std::to_string(value);
-}
-std::string Standard::Convert::ToString(double value)
-{
-    return std::to_string(value);
-}
-std::string Standard::Convert::ToString(char value)
-{
-    return std::to_string(value);
-}
-std::string Standard::Convert::ToString(bool value)
-{
-    return std::to_string(value);
-}
-int Standard::Random::Int(int min, int max)
-{
-    return (rand() % max) + min;
-}
