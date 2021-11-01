@@ -7,19 +7,19 @@ namespace Standard
         public extern static void Write(string stringtext);
         public extern static void Write(int inttext);
         public extern static string ReadLine();
+        public extern static void OpenFile(string filename);
+        public extern static void CloseFile();
+        public extern static void WriteLineToFile(string text);
+        public extern static void WriteToFile(string text);
     }
     class Convert
     {
         public extern static string ToString(int value);
-        public extern static string ToString(float value);
-        public extern static string ToString(double value);
-        public extern static string ToString(char value);
-        public extern static string ToString(bool value);
     }
     class Random
     {
         public extern static string Int(int min, int max);
-        public extern static string String(int chars);
+        public extern static string String(int stringType, int chars);
     }
 }
 
@@ -28,10 +28,10 @@ using Standard;
 namespace NAME {
    public class Test {
        public static int Main() {
-           Console.WriteLine("Hello World!");
-           Console.WriteLine(Random.String(0, 5));
-           Console.WriteLine(Random.String(1, 5));
-           Console.WriteLine(Random.String(2, 5));
+            Console.OpenFile("test.txt");
+            Console.WriteToFile("Hello World!");
+            Console.CloseFile();
+            return 0;
        }
    }
 }

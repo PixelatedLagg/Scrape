@@ -11,9 +11,9 @@ namespace NAME {
 using namespace NAME;
 
 int main() {
-	Console::WriteLine("Hello World!");
-	Console::WriteLine(Random::String(0, 5));
-	Console::WriteLine(Random::String(1, 5));
-	Console::WriteLine(Random::String(2, 5));
+	Console::OpenFile("test.txt");
+	Console::WriteToFile("Hello World!");
+	Console::CloseFile();
+	return 0;
 }
 

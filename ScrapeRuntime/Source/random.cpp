@@ -48,4 +48,5 @@ std::string Standard::Random::String(int stringType, int chars)
             return str;
         }
     }
+    return "";
 }
