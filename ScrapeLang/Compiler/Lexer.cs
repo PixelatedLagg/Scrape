@@ -14,6 +14,8 @@ namespace Scrape
 		String,
 		LParen,
 		RParen,
+		LBrace,
+		RBrace,
 		LBracket,
 		RBracket,
 		Operator,
@@ -78,7 +80,7 @@ namespace Scrape
 		/// </summary>
 		private string Source;
 
-		private int Position = 0;
+		public int Position = 0;
 
 		private int Line = 1;
 
@@ -225,6 +227,18 @@ namespace Scrape
 				Get();
 
 				return new Token(TokenType.RBracket, Line, Column, "}");
+			}
+
+			if (c == '[') {
+				Get();
+
+				return new Token(TokenType.LBrace, Line, Column, "[");
+			}
+
+			if (c == ']') {
+				Get();
+
+				return new Token(TokenType.RBrace, Line, Column, "]");
 			}
 
 			if (c == ',') {

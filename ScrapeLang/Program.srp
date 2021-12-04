@@ -27,10 +27,16 @@ using Standard;
 
 namespace NAME {
    public class Test {
+       public void Empty() {}
+
        public static int Main() {
-            Console.OpenFile("test.txt");
-            Console.WriteToFile("Hello World!");
-            Console.CloseFile();
+            Test t = new Test();
+
+            t.Prop = 15;
+
+			t["Prop"] = 20;
+
+            Console.WriteLine(t.Wow);
             return 0;
        }
    }
