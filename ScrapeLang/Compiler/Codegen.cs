@@ -565,11 +565,13 @@ namespace Scrape.Code.Generation {
                 top = Parser.TopLevel();
             }
 
-            Output += $"using namespace {EntryContext.Parent.Name};\n\n";
+			if (EntryContext != null) {
+				Output += $"using namespace {EntryContext.Parent.Name};\n\n";
 
-            Context = EntryContext;
+				Context = EntryContext;
 
-            Output += Method(Entry);
+				Output += Method(Entry);
+			}
         }
 
         public Compiler(string source) {
