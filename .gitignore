@@ -1,6 +1,11 @@
+#ignore exe
 scrape
+
+#ignore essential c# files
 ScrapeLang/bin/*
 ScrapeLang/obj/*
-ScrapeLang/ScrapeLang/generated.cpp
 ScrapeRuntime/bin/*
 ScrapeRuntime/obj/*
+
+#ignore generated c++ file
+ScrapeLang/ScrapeLang/generated.cpp
