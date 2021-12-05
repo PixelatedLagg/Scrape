@@ -345,7 +345,7 @@ namespace Scrape {
 				result.Name = Source.GetToken().String();
 
 				if (Source.PeekToken().Type != TokenType.LBracket) {
-					throw new SyntaxError("Expected [{] after namespace definition", Source.GetToken());
+					Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2001] Expected [{] after namespace definition");
 				}
 
 				Source.GetToken(); // {
@@ -353,7 +353,7 @@ namespace Scrape {
 				// Get namespace contents
 				while (Source.PeekToken().Type != TokenType.RBracket) {
 					if (Source.PeekToken().Type == TokenType.EOF) {
-						throw new SyntaxError("Expected [}] after namespace body", Source.GetToken());
+						Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2002] Expected [}] after namespace body");
 					}
 
 					result.NamespaceData.Add(TopLevel());
@@ -370,7 +370,7 @@ namespace Scrape {
 				Token name = Source.GetToken();
 
 				if (name.Type != TokenType.Identifier) {
-					throw new SyntaxError("Expected identifier after class definition", name);
+					Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2003] Expected identifier after class definition");
 				}
 
 				result.Type = TopLevelType.Class;
@@ -379,7 +379,7 @@ namespace Scrape {
 
 				// Error if next token is not a {
 				if (Source.PeekToken().Type != TokenType.LBracket) {
-					throw new SyntaxError("Expected [{] after class definition", Source.GetToken());
+					Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2004] Expected [{] after class definition");
 				}
 
 				result.ClassData = ClassBody();
@@ -395,7 +395,7 @@ namespace Scrape {
 				result.Path = Expression();
 
 				if (Source.PeekToken().Type != TokenType.Semicolon) {
-					throw new SyntaxError("Expected [;] after using statement", Source.GetToken());
+					Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2005] Expected [;] after using statement");
 				}
 
 				Source.GetToken(); // ;
@@ -417,7 +417,7 @@ namespace Scrape {
 				result.Expression = Expression();
 
 				if (Source.PeekToken().Type != TokenType.Semicolon) {
-					throw new SyntaxError("Expected [;] after return statement", Source.GetToken());
+					Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2006] Expected [;] after return statement");
 				}
 
 				Source.GetToken(); // ;
@@ -429,7 +429,7 @@ namespace Scrape {
 				Source.GetToken();
 
 				if (Source.PeekToken().Type != TokenType.LParen) {
-					throw new SyntaxError("Expected [(] after [if]", Source.GetToken());
+					Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2007] Expected [(] after [if]");
 				}
 
 				Source.GetToken();
@@ -437,7 +437,7 @@ namespace Scrape {
 				Expr cond = Expression();
 
 				if (Source.PeekToken().Type != TokenType.RParen) {
-					throw new SyntaxError("Expected [)] after expression", Source.PeekToken());
+					Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2008] Expected [)] after expression");
 				}
 
 				Source.GetToken();
@@ -447,7 +447,7 @@ namespace Scrape {
 				result.Condition = cond;
 
 				if (Source.PeekToken().Type != TokenType.LBracket) {
-					throw new SyntaxError("Expected [{] after [)]", Source.PeekToken());
+					Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2009] Expected [{] after [)]");
 				}
 
 				result.Body = Body();
@@ -461,7 +461,7 @@ namespace Scrape {
 
 			if (Source.PeekToken().Is(TokenType.Operator, "=")) {
 				if (Source.PeekToken().Type != TokenType.Operator || Source.PeekToken().String() != "=") {
-					throw new SyntaxError("Expected [=] after assignment subject", Source.PeekToken());
+					Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2010] Expected [=] after assignment subject");
 				}
 
 				Source.GetToken(); // =
@@ -473,7 +473,7 @@ namespace Scrape {
 				result.Expression = Expression();
 
 				if (Source.PeekToken().Type != TokenType.Semicolon) {
-					throw new SyntaxError("Expected [;] after assignment", Source.GetToken());
+					Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2011] Expected [;] after assignment");
 				}
 
 				Source.GetToken(); // ;
@@ -487,13 +487,13 @@ namespace Scrape {
 				Token type = Source.GetToken();
 
 				if (type.Type != TokenType.Identifier) {
-					throw new SyntaxError("Expected identifier", type);
+					Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2012] Expected identifier");
 				}
 
 				Token name = Source.GetToken();
 
 				if (name.Type != TokenType.Identifier) {
-					throw new SyntaxError("Expected identifier", name);
+					Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2012] Expected identifier");
 				}
 
 				Source.GetToken(); // =
@@ -507,7 +507,7 @@ namespace Scrape {
 				result.Expression = Expression();
 
 				if (Source.GetToken().Type != TokenType.Semicolon) {
-					throw new SyntaxError("Expected [;] after statement", Source.GetToken());
+					Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2013] Expected [;] after statement");
 				}
 
 				return result;
@@ -523,13 +523,13 @@ namespace Scrape {
 				Token tname = Source.GetToken();
 
 				if (tname.Type != TokenType.Identifier) {
-					throw new SyntaxError("Expected identifier", tname);
+					Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2012] Expected identifier");
 				}
 				
 				Token name = Source.GetToken();
 
 				if (name.Type != TokenType.Identifier) {
-					throw new SyntaxError("Expected identifier", name);
+					Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2012] Expected identifier");
 				}
 
 				if (Source.PeekToken().Is(TokenType.LParen, "(")) {
@@ -544,19 +544,19 @@ namespace Scrape {
 					Source.GetToken(); // (
 
 					if (! Source.PeekToken().Is(TokenType.RParen, ")")) {
-						throw new SyntaxError("Expected [)] after argument list", Source.GetToken());
+						Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2014] Expected [)] after argument list");
 					}
 
 					Source.GetToken(); // )
 
 					if (! Source.PeekToken().Is(TokenType.LBracket, "{")) {
-						throw new SyntaxError("Expected [{] after argument list", Source.GetToken());
+						Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2015] Expected [{] after argument list");
 					}
 
 					result.Body = Body();
 
 					if (Source.GetToken().Type != TokenType.Semicolon) {
-						throw new SyntaxError("Expected [;] after statement", Source.GetToken());
+						Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2013] Expected [;] after statement");
 					}
 
 					return result;
@@ -595,7 +595,7 @@ namespace Scrape {
 			}*/
 
 			if (Source.GetToken().Type != TokenType.Semicolon) {
-				throw new SyntaxError("Expected [;] after statement", Source.GetToken());
+				Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2013] Expected [;] after statement");
 			}
 
 			return new Stmt(expr);
@@ -630,7 +630,7 @@ namespace Scrape {
 				Token name = Source.GetToken();
 
 				if (name.Type != TokenType.Identifier) {
-					throw new SyntaxError("Expected identifier", name);
+					Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2012] Expected identifier");
 				}
 
 				if (Source.PeekToken().Is(TokenType.Operator, "=")) {
@@ -658,7 +658,7 @@ namespace Scrape {
 
 					while (! Source.PeekToken().Is(TokenType.RParen, ")")) {
 						if (Source.PeekToken().Type == TokenType.EOF) {
-							throw new SyntaxError("Expected [)] after argument list", open);
+							Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2014] Expected [)] after argument list");
 						}
 
 						// Add name = type
@@ -668,7 +668,7 @@ namespace Scrape {
 						Token name2 = Source.GetToken();
 
 						if (name2.Type != TokenType.Identifier) {
-							throw new SyntaxError("Expected identifier", name);
+							Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2012] Expected identifier");
 						}
 
 						result.ArgNames.Add(name2.String());
@@ -685,7 +685,7 @@ namespace Scrape {
 					bool nobody = result.Modifiers.Contains("abstract") || result.Modifiers.Contains("extern");
 
 					if (! nobody && ! Source.PeekToken().Is(TokenType.LBracket, "{")) {
-						throw new SyntaxError("Expected [{] after argument list", Source.GetToken());
+						Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2015] Expected [{] after argument list");
 					}
 
 					if (! nobody) {
@@ -693,7 +693,7 @@ namespace Scrape {
 					}
 					else {
 						if (Source.PeekToken().Type != TokenType.Semicolon) {
-							throw new SyntaxError("Expected [;] after extern function", Source.GetToken());
+							Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2016] Expected [;] after extern function");
 						}
 
 						Source.GetToken(); // ;
@@ -713,7 +713,7 @@ namespace Scrape {
 			
 			while (Source.PeekToken().Type != TokenType.RBracket) {
 				if (Source.PeekToken().Type == TokenType.EOF) {
-					throw new SyntaxError("Expected [}] before end of file.", start);
+					Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2017] Expected [}] before end of file");
 				}
 
 				statements.Add(Statement());
@@ -743,7 +743,7 @@ namespace Scrape {
 				Source.GetToken();
 
 				if (dot && op.Op != ".") {
-					throw new SyntaxError("Expected [.] after identifier", Source.GetToken());
+					Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2018] Expected [.] after identifier");
 				}
 
 				Operators.Push(op);
@@ -769,7 +769,7 @@ namespace Scrape {
 
 					while (Source.PeekToken().Is(TokenType.Comma, ",")) {
 						if (Source.PeekToken().Type == TokenType.EOF) {
-							throw new SyntaxError("Expected [)] after argument list", Source.GetToken());
+							Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2014] Expected [)] after argument list");
 						}
 
 						Source.GetToken(); // ,
@@ -810,7 +810,7 @@ namespace Scrape {
 
 			if (tok.Is(TokenType.Identifier, "new")) {
 				if (Source.PeekToken().Type != TokenType.Identifier) {
-					throw new SyntaxError("Expected identifier", Source.GetToken());
+					Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2012] Expected identifier");
 				}
 
 				Expr subject = Expression(true);
@@ -825,7 +825,7 @@ namespace Scrape {
 
 						while (Source.PeekToken().Is(TokenType.Comma, ",")) {
 							if (Source.PeekToken().Type == TokenType.EOF) {
-								throw new SyntaxError("Expected [)] after argument list", Source.GetToken());
+								Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2014] Expected [)] after argument list");
 							}
 
 							Source.GetToken(); // ,
@@ -847,7 +847,7 @@ namespace Scrape {
 				Expr expr = Expression();
 
 				if (Source.PeekToken().Type != TokenType.RParen) {
-					throw new SyntaxError("Expected [)] after expression.", tok);
+					Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2008] Expected [)] after expression");
 				}
 
 				Source.GetToken();
@@ -870,7 +870,7 @@ namespace Scrape {
 				index.Index = Expression();
 
 				if (Source.PeekToken().Type != TokenType.RBrace) {
-					throw new SyntaxError("Expected []] after expression", Source.GetToken());
+					Error.ThrowError(Source.GetLine, Source.GetColumn, "[SRP2019] Expected []] after expression");
 				}
 
 				Source.GetToken(); // ]

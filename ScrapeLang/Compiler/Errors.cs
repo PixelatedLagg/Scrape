@@ -17,21 +17,21 @@ namespace Scrape
             info.AddValue("Position", Position, Position.GetType());
         }
     }
-    public class CompileError : Exception
+    public static class Error
     {
-        public CompileError(string message) : base($"Compile Error: ({message})") {}
-    }
-    public class ParseException : Exception 
-    {
-		private string _Message;
-		public override string Message { get { return _Message; } }
-		public ParseException(Token tok, string message) 
+        public static void ThrowError(string error)
         {
-			_Message = $"({tok.Line}, {tok.Column}): {message}";
-		}
-		public ParseException(int line, int column, string message) 
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"Errors:\r\n{Global.CurrentPath} - {error}");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Environment.Exit(0);
+        }
+        public static void ThrowError(int line, int pos, string error)
         {
-			_Message = $"({line}, {column}): {message}";
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"Errors:\r\n{Global.CurrentPath}({line}, {pos}) - {error}");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Environment.Exit(0);
         }
     }
 }

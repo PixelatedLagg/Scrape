@@ -37,7 +37,7 @@ namespace Scrape
 		/// <returns><see cref="int"/></returns>
 		public int Integer() {
 			if (Type != TokenType.Integer) {
-				throw new ParseException(Line, Column, "Token value is not an integer!");
+				Error.ThrowError(Line, Column, "[SRP1001] Token value is not an integer");
 			}
 
 			return (int) Value;
@@ -141,7 +141,7 @@ namespace Scrape
 
 			while (! cmp(Peek())) {
 				if (Peek() == '\0') {
-					throw new ParseException(Line, Column, $"Expected {expect} but got 'EOF'");
+					Error.ThrowError(Line, Column, "[SRP1002] End of file unexpected");
                 }
 
 				str += Get();
@@ -158,6 +158,20 @@ namespace Scrape
 			}
 
 			return str;
+		}
+		public int GetLine
+		{
+			get
+			{
+				return Line;
+			}
+		}
+		public int GetColumn
+		{
+			get
+			{
+				return Column;
+			}
 		}
 
 		public Token GetToken() {

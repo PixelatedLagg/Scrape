@@ -415,7 +415,7 @@ namespace Scrape.Code.Generation {
             foreach (ClassMember member in top.ClassData) {
                 if (member.Name == "Main" && Global.Entrypoint)
                 {
-                    throw new CompileError("More than one entrypoint provided!");
+                    Error.ThrowError("More than one entrypoint specified!");
                 }
                 if (member.Name == "Main") {
                     Global.Entrypoint = true;
