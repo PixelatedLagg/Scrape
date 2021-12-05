@@ -413,12 +413,12 @@ namespace Scrape.Code.Generation {
             bool emit = false;
 
             foreach (ClassMember member in top.ClassData) {
-                if (member.Name == "Main" && Global.Entrypoint)
+                if (member.Name == "Main" && Global.EntryPoint)
                 {
                     Error.ThrowError("More than one entrypoint specified!");
                 }
                 if (member.Name == "Main") {
-                    Global.Entrypoint = true;
+                    Global.EntryPoint = true;
                     member.Name = "main";
                     
                     EntryContext = Context;

@@ -1,3 +1,4 @@
+using System.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -5,10 +6,11 @@ using Scrape.Code.Generation;
 
 namespace Scrape
 {
-    class Program
+    public static class Program
     {
         static void Main(string[] argsCLI) 
         {
+            ProjectFile.GetProjectFile();
             List<string> argsList = new List<string>();
             foreach (string s in argsCLI)
             {   
@@ -33,18 +35,32 @@ namespace Scrape
                                             sw.Write("class Program\r\n{\r\n    public static void Main()\r\n    {        \r\n    {\r\n{");
                                         }
                                     }
-                                    Environment.Exit(0);
+                                }
+                                break;
+                            case "--list":
+                                Console.WriteLine($"Installed Scrape Templates: {Global.Templates.Count()}\r\nName:    Desc:    ID:");
+                                foreach (Template template in Global.Templates)
+                                {
+                                    Console.WriteLine($"{template.Name}    {template.Desc}    {template.ID}");
                                 }
                                 break;
                             default:
-                                Console.ForegroundColor = ConsoleColor.Red;
-                                Console.WriteLine($"\"{args[1]}\" is not a Scrape CLI template");
-                                Console.ForegroundColor = ConsoleColor.Gray;
+                                Global.Templates = new List<Template>();
+                                DefaultTemplates.Add();
+                                ProjectFile.ReadTemplates();
+                                foreach (Template template in Global.Templates)
+                                {
+                                    if (template.ID == args[2])
+                                    {
+                                        
+                                    }
+                                }
+                                Error.CLIError($"\"{args[1]}\" is not an installed Scrape template ID");
                                 break;
-                        } //add --list option to list all templates
+                        }
                         break;
                     case "run":
-                        Global.Entrypoint = false;
+                        Global.EntryPoint = false;
                         Directory.CreateDirectory($"{Path.Combine(Directory.GetCurrentDirectory(), @"..\..")}\\output");
                         foreach (string file in Directory.GetFiles(Path.Combine(Directory.GetCurrentDirectory(), @"..\..")))
                         {
@@ -63,15 +79,14 @@ namespace Scrape
                                 }
                             }
                         }
-                        if (!Global.Entrypoint)
+                        if (!Global.EntryPoint)
                         {
-                            Error.ThrowError("No entrypoint specified!");
+                            Error.CLIError("No entrypoint specified");
                         }
                         //run generated files here
-                        Environment.Exit(0);
                         break;
                     case "build":
-                        Global.Entrypoint = false;
+                        Global.EntryPoint = false;
                         Directory.CreateDirectory($"{Path.Combine(Directory.GetCurrentDirectory(), @"..\..")}\\output");
                         foreach (string file in Directory.GetFiles(Path.Combine(Directory.GetCurrentDirectory(), @"..\..")))
                         {
@@ -90,9 +105,9 @@ namespace Scrape
                                 }
                             }
                         }
-                        if (!Global.Entrypoint)
+                        if (!Global.EntryPoint)
                         {
-                            Error.ThrowError("No entrypoint specified!");
+                            Error.CLIError("No entrypoint specified");
                         }
                         //build generated files into exe here
                         Console.ForegroundColor = ConsoleColor.Green;
@@ -100,8 +115,7 @@ namespace Scrape
                         Console.ForegroundColor = ConsoleColor.Gray;
                         break;
                     default:
-                        Console.WriteLine($"\"{args[0]}\" is not a valid command!");
-                        Environment.Exit(0);
+                        Console.WriteLine($"\"{args[0]}\" is not a valid command");
                         break;
                 }
             }

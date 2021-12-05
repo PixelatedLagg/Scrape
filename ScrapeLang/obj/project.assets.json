@@ -13,9 +13,9 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\pixil\\Desktop\\Scrape Github\\Scrape\\ScrapeLang\\ScrapeLang.csproj",
-      "projectName": "ScrapeLang",
-      "projectPath": "C:\\Users\\pixil\\Desktop\\Scrape Github\\Scrape\\ScrapeLang\\ScrapeLang.csproj",
+      "projectUniqueName": "C:\\Users\\pixil\\Desktop\\Scrape Github\\Scrape\\ScrapeLang\\scrape.csproj",
+      "projectName": "scrape",
+      "projectPath": "C:\\Users\\pixil\\Desktop\\Scrape Github\\Scrape\\ScrapeLang\\scrape.csproj",
       "packagesPath": "C:\\Users\\pixil\\.nuget\\packages\\",
       "outputPath": "C:\\Users\\pixil\\Desktop\\Scrape Github\\Scrape\\ScrapeLang\\obj\\",
       "projectStyle": "PackageReference",

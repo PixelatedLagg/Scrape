@@ -18,6 +18,12 @@ namespace Scrape
             Console.ForegroundColor = ConsoleColor.Gray;
             Environment.Exit(0);
         }
+        public static void CLIError(string error)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"CLI Error: {error}");
+            Console.ForegroundColor = ConsoleColor.Gray;
+        }
         public static void ThrowWarning(string warning)
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
