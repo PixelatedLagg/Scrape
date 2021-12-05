@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Scrape.Code.Generation;
 
@@ -6,12 +7,42 @@ namespace Scrape
 {
     class Program
     {
-        static void Main(string[] args) 
+        static void Main(string[] argsCLI) 
         {
+            List<string> argsList = new List<string>();
+            foreach (string s in argsCLI)
+            {   
+                argsList.Add(s.ToLower());
+            }
+            string[] args = argsList.ToArray();
             if (args.Length == 1)
             {
                 switch (args[0])
                 {
+                    case "new":
+                        switch (args[1])
+                        {
+                            case "console":
+                                if (File.Exists($"{Path.Combine(Directory.GetCurrentDirectory(), @"..\..")}\\Program.srp"))
+                                {
+                                    Console.WriteLine("This operation will overwrite Program.srp\r\n[Y] or [N] to continue");
+                                    if (Console.ReadLine().ToLower() == "y")
+                                    {
+                                        using (StreamWriter sw = new StreamWriter($"{Path.Combine(Directory.GetCurrentDirectory(), @"..\..")}\\Program.srp"))
+                                        {
+                                            sw.Write("class Program\r\n{\r\n    public static void Main()\r\n    {        \r\n    {\r\n{");
+                                        }
+                                    }
+                                    Environment.Exit(0);
+                                }
+                                break;
+                            default:
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.WriteLine($"\"{args[1]}\" is not a Scrape CLI template");
+                                Console.ForegroundColor = ConsoleColor.Gray;
+                                break;
+                        } //add --list option to list all templates
+                        break;
                     case "run":
                         Global.Entrypoint = false;
                         Directory.CreateDirectory($"{Path.Combine(Directory.GetCurrentDirectory(), @"..\..")}\\output");
