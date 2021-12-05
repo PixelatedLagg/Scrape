@@ -5,6 +5,7 @@ namespace Scrape {
 	public enum ExprType {
 		Literal,
 		Call,
+		Index,
 		Binary,
 		New
 	}
@@ -22,6 +23,8 @@ namespace Scrape {
 
 		public Expr Subject;
 
+		public Expr Index;
+
 		public List<Expr> Args;
 
 		public override string ToString() {
@@ -35,6 +38,10 @@ namespace Scrape {
 
 			if (Type == ExprType.Call) {
 				return $"{Subject.ToString()}({String.Join(", ", Args)})";
+			}
+
+			if (Type == ExprType.Index) {
+				return $"{Subject.ToString()}[{Index.ToString()}]";
 			}
 
 			string left = Left.Type == ExprType.Binary && Left.Op.String() != "." ? $"({Left})" : $"{Left}";
@@ -74,6 +81,7 @@ namespace Scrape {
 
 	public enum StmtType {
 		VarDef,
+		Assignment,
 		If,
 		Return,
 		Expression,
@@ -89,6 +97,8 @@ namespace Scrape {
 		public string TypeName;
 
 		public string Name;
+
+		public Expr Path;
 
 		public Expr Condition;
 
@@ -445,6 +455,34 @@ namespace Scrape {
 				return result;
 			}
 
+			int pos = Source.Position;
+
+			Expr path = Expression(true);
+
+			if (Source.PeekToken().Is(TokenType.Operator, "=")) {
+				if (Source.PeekToken().Type != TokenType.Operator || Source.PeekToken().String() != "=") {
+					throw new SyntaxError("Expected [=] after assignment subject", Source.PeekToken());
+				}
+
+				Source.GetToken(); // =
+
+				result.Type = StmtType.Assignment;
+
+				result.Path = path;
+
+				result.Expression = Expression();
+
+				if (Source.PeekToken().Type != TokenType.Semicolon) {
+					throw new SyntaxError("Expected [;] after assignment", Source.GetToken());
+				}
+
+				Source.GetToken(); // ;
+
+				return result;
+			}
+
+			Source.Position = pos;
+
 			if (Source.PeekToken(3).Is(TokenType.Operator, "=")) {
 				Token type = Source.GetToken();
 
@@ -768,6 +806,8 @@ namespace Scrape {
 		public Expr Primary() {
 			Token tok = Source.GetToken();
 
+			Expr result;
+
 			if (tok.Is(TokenType.Identifier, "new")) {
 				if (Source.PeekToken().Type != TokenType.Identifier) {
 					throw new SyntaxError("Expected identifier", Source.GetToken());
@@ -801,10 +841,9 @@ namespace Scrape {
 
 				expr.Type = ExprType.New;
 
-				return expr;
+				Operands.Push(expr);
 			}
-
-			if (tok.Type == TokenType.LParen) {
+			else if (tok.Type == TokenType.LParen) {
 				Expr expr = Expression();
 
 				if (Source.PeekToken().Type != TokenType.RParen) {
@@ -813,10 +852,33 @@ namespace Scrape {
 
 				Source.GetToken();
 
-				return expr;
+				Operands.Push(expr);
+			}
+			else {
+				Operands.Push(new Expr(tok));
 			}
 
-			return new Expr(tok);
+			while (Source.PeekToken().Type == TokenType.LBrace) {
+				Expr index = new Expr();
+
+				index.Type = ExprType.Index;
+
+				index.Subject = Operands.Pop();
+
+				Source.GetToken(); // [
+				
+				index.Index = Expression();
+
+				if (Source.PeekToken().Type != TokenType.RBrace) {
+					throw new SyntaxError("Expected []] after expression", Source.GetToken());
+				}
+
+				Source.GetToken(); // ]
+
+				Operands.Push(index);
+			}
+
+			return Operands.Pop();
 		}
 		
 		public Parser(string src) {

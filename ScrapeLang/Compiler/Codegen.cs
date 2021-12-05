@@ -195,6 +195,18 @@ namespace Scrape.Code.Generation {
             return null;
         }
 
+        private TypeInfo GetType(Expr typepath) {
+            TypeInfo result = null;
+
+            Scope scope = Context.Get(typepath.Left?.Type == ExprType.Binary ? GetType(typepath.Left).Name : typepath.Left.Value.String())?.Scope;
+
+            if (scope == null) {
+                throw new Exception("Type not found: " + typepath.Left.Value.String());
+            }
+
+            return scope.Get(typepath.Right.Value.String());
+        }
+
         public string Indent() {
             string result = "";
 
@@ -324,6 +336,12 @@ namespace Scrape.Code.Generation {
                 result += "return " + Expression(st.Expression) + ";\n";
             }
 
+            if (st.Type == StmtType.Assignment) {
+                result += $"if ({Expression(st.Path)} != nullptr) {Expression(st.Path)}->S_Handle->Unref();\n";
+
+                result += Expression(st.Path) + " = " + Expression(st.Expression) + ";\n";
+            }
+
             if (st.Type == StmtType.If) {
                 result += "if (" + Expression(st.Condition) + ") {\n";
 
@@ -357,6 +375,10 @@ namespace Scrape.Code.Generation {
 
                 string tname = st.TypeName;
 
+                if (tname != DeduceType(st.Expression).Name) {
+                    throw new Exception($"Type mismatch in variable definition (assigning '{DeduceType(st.Expression).Name}' to '{tname}')");
+                }
+
                 if (type != null) {
                     tname = type.Name + '*';
                 }
@@ -372,7 +394,7 @@ namespace Scrape.Code.Generation {
             
             IndentLevel++;
 
-            result += "class " + top.Name + " {\n" + Indent() + "public:\n\n";
+            result += "class " + top.Name + " : S_Object {\n" + Indent() + "public:\n\n";
 
             Context = new Scope(Context, ScopeType.Class);
 
@@ -428,7 +450,9 @@ namespace Scrape.Code.Generation {
             string result = "";
 
             if (expr.Type == ExprType.New) {
-                result += "new " + Expression(expr.Subject) + "(";
+                // result += "new " + Expression(expr.Subject) + "(";
+
+                result += $"S_GC::Alloc<{Expression(expr.Subject)}>()";
 
                 for (int i = 0; i < expr.Args.Count; i++) {
                     result += Expression(expr.Args[i]);
@@ -442,8 +466,6 @@ namespace Scrape.Code.Generation {
             }
 
             if (expr.Type == ExprType.Binary) {
-                result += Expression(expr.Left);
-
                 Scope cl = Context.Get(expr.Left.Value.String())?.Scope;
 
                 if (cl == null) {
@@ -460,17 +482,25 @@ namespace Scrape.Code.Generation {
 
                 // C++ uses :: instead of . for static members
                 if (expr.Op.String() == "." && cl != null && righttype != null && righttype.Static) {
+                    result += Expression(expr.Left);
+
                     result += "::";
                 } else {
                     if (expr.Op.String() == ".") {
-                        result += $"->";
+                        result += "(*" + Expression(expr.Left) + ")[\"";
                     }
                     else {
+                        result += Expression(expr.Left);
+
                         result += $" {expr.Op.String()} ";
                     }
                 }
 
                 result += Expression(expr.Right);
+
+                if (expr.Op.String() == "." && righttype?.Static == null || righttype?.Static == false) {
+                    result += "\"]";
+                }
 
                 return result;
             }
@@ -491,6 +521,10 @@ namespace Scrape.Code.Generation {
                 return result;
             }
 
+			if (expr.Type == ExprType.Index) {
+				return $"(*{Expression(expr.Subject)})[{Expression(expr.Index)}]";
+			}
+
             if (expr.Type == ExprType.Literal) {
                 if (expr.Value.Type == TokenType.String) {
                     result += "\"" + expr.Value.String() + "\"";
@@ -507,7 +541,7 @@ namespace Scrape.Code.Generation {
         public void Compile() {
             TopLevel top = Parser.TopLevel();
 
-            Output += "#include <io.hpp>\n\n";
+            Output += "#include <scrape.hpp>\n\n";
 
             while (top != null) {
                 if (top.Type == TopLevelType.Namespace) {
