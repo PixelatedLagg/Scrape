@@ -9,6 +9,7 @@ namespace Scrape
     {
         static void Main(string[] args) 
         {
+            Global.Entrypoint = false;
             foreach (string file in Directory.GetFiles(Path.Combine(Directory.GetCurrentDirectory(), @"..\..")))
             {
                 if (Path.GetExtension(file) == ".srp")
@@ -24,6 +25,10 @@ namespace Scrape
                         writer.Write(compiler.Output);
                     }
                 }
+            }
+            if (!Global.Entrypoint)
+            {
+                throw new CompileError("no entrypoint provided!");
             }
 		}
     }

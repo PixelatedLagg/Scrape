@@ -806,7 +806,7 @@ namespace Scrape {
 		public Expr Primary() {
 			Token tok = Source.GetToken();
 
-			Expr result;
+			//Expr result;
 
 			if (tok.Is(TokenType.Identifier, "new")) {
 				if (Source.PeekToken().Type != TokenType.Identifier) {

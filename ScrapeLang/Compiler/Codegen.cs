@@ -196,7 +196,7 @@ namespace Scrape.Code.Generation {
         }
 
         private TypeInfo GetType(Expr typepath) {
-            TypeInfo result = null;
+            //TypeInfo result = null;
 
             Scope scope = Context.Get(typepath.Left?.Type == ExprType.Binary ? GetType(typepath.Left).Name : typepath.Left.Value.String())?.Scope;
 
@@ -413,7 +413,12 @@ namespace Scrape.Code.Generation {
             bool emit = false;
 
             foreach (ClassMember member in top.ClassData) {
+                if (member.Name == "Main" && Global.Entrypoint)
+                {
+                    throw new CompileError("More than one entrypoint provided!");
+                }
                 if (member.Name == "Main") {
+                    Global.Entrypoint = true;
                     member.Name = "main";
                     
                     EntryContext = Context;
@@ -421,7 +426,6 @@ namespace Scrape.Code.Generation {
 
                     continue;
                 }
-
                 if (! member.Modifiers.Contains("abstract") && ! member.Modifiers.Contains("extern")) {
                     emit = true;
                 }
