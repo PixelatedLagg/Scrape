@@ -7,15 +7,24 @@ namespace Scrape
 {
     class Program
     {
-        static void Main(string[] args) {
-            Compiler compiler;
-            using (StreamReader reader = new StreamReader("Program.srp")) {
-                compiler = new Compiler(reader.ReadToEnd());
+        static void Main(string[] args) 
+        {
+            foreach (string file in Directory.GetFiles(Path.Combine(Directory.GetCurrentDirectory(), @"..\..")))
+            {
+                if (Path.GetExtension(file) == ".srp")
+                {
+                    Compiler compiler;
+                    using (StreamReader reader = new StreamReader(file)) 
+                    {
+                        compiler = new Compiler(reader.ReadToEnd());
+                    }
+                    compiler.Compile();
+                    using (StreamWriter writer = new StreamWriter($"{Path.GetFileNameWithoutExtension(file)}.cpp")) 
+                    {
+                        writer.Write(compiler.Output);
+                    }
+                }
             }
-            compiler.Compile();
-            using (StreamWriter writer = new StreamWriter("generated.cpp")) {
-                writer.Write(compiler.Output);
-            }
-		} // => new Input().Start(args);
+		}
     }
 }
