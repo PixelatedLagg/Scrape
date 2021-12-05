@@ -1,22 +1,7 @@
-using System.Linq;
 using System;
-using System.IO;
-using System.Runtime.Serialization;
 
 namespace Scrape
 {
-    public class SyntaxError : Exception
-    {
-        public string Position { get; set; }
-        public SyntaxError(string message, Token token) : base($"Syntax Error: ({message}) Trace: {token}") 
-        {
-            Position = token.ToString();
-        }
-        protected SyntaxError(SerializationInfo info, StreamingContext context) : base(info, context) 
-        { 
-            info.AddValue("Position", Position, Position.GetType());
-        }
-    }
     public static class Error
     {
         public static void ThrowError(string error)
@@ -30,6 +15,20 @@ namespace Scrape
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"Errors:\r\n{Global.CurrentPath}({line}, {pos}) - {error}");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Environment.Exit(0);
+        }
+        public static void ThrowWarning(string warning)
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine($"Warnings:\r\n{Global.CurrentPath} - {warning}");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Environment.Exit(0);
+        }
+        public static void ThrowWarning(int line, int pos, string warning)
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine($"Warnings:\r\n{Global.CurrentPath}({line}, {pos}) - {warning}");
             Console.ForegroundColor = ConsoleColor.Gray;
             Environment.Exit(0);
         }

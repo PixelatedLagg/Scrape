@@ -1,0 +1,16 @@
+C:\Users\pixil\Desktop\Scrape Github\Scrape\ScrapeLang\bin\Debug\net5.0\ScrapeLang.exe
+C:\Users\pixil\Desktop\Scrape Github\Scrape\ScrapeLang\bin\Debug\net5.0\ScrapeLang.deps.json
+C:\Users\pixil\Desktop\Scrape Github\Scrape\ScrapeLang\bin\Debug\net5.0\ScrapeLang.runtimeconfig.json
+C:\Users\pixil\Desktop\Scrape Github\Scrape\ScrapeLang\bin\Debug\net5.0\ScrapeLang.runtimeconfig.dev.json
+C:\Users\pixil\Desktop\Scrape Github\Scrape\ScrapeLang\bin\Debug\net5.0\ScrapeLang.dll
+C:\Users\pixil\Desktop\Scrape Github\Scrape\ScrapeLang\bin\Debug\net5.0\ref\ScrapeLang.dll
+C:\Users\pixil\Desktop\Scrape Github\Scrape\ScrapeLang\bin\Debug\net5.0\ScrapeLang.pdb
+C:\Users\pixil\Desktop\Scrape Github\Scrape\ScrapeLang\obj\Debug\net5.0\ScrapeLang.csproj.AssemblyReference.cache
+C:\Users\pixil\Desktop\Scrape Github\Scrape\ScrapeLang\obj\Debug\net5.0\ScrapeLang.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\pixil\Desktop\Scrape Github\Scrape\ScrapeLang\obj\Debug\net5.0\ScrapeLang.AssemblyInfoInputs.cache
+C:\Users\pixil\Desktop\Scrape Github\Scrape\ScrapeLang\obj\Debug\net5.0\ScrapeLang.AssemblyInfo.cs
+C:\Users\pixil\Desktop\Scrape Github\Scrape\ScrapeLang\obj\Debug\net5.0\ScrapeLang.csproj.CoreCompileInputs.cache
+C:\Users\pixil\Desktop\Scrape Github\Scrape\ScrapeLang\obj\Debug\net5.0\ScrapeLang.dll
+C:\Users\pixil\Desktop\Scrape Github\Scrape\ScrapeLang\obj\Debug\net5.0\ref\ScrapeLang.dll
+C:\Users\pixil\Desktop\Scrape Github\Scrape\ScrapeLang\obj\Debug\net5.0\ScrapeLang.pdb
+C:\Users\pixil\Desktop\Scrape Github\Scrape\ScrapeLang\obj\Debug\net5.0\ScrapeLang.genruntimeconfig.cache
