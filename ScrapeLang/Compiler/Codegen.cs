@@ -158,12 +158,16 @@ namespace Scrape.Code.Generation {
         public TypeInfo DeduceType(Expr expr) {
             if (expr.Type == ExprType.Literal) {
                 string type = "error";
-
-                if (expr.Value.Type == TokenType.String) {
-                    type = "string";
-                } else if (expr.Value.Type == TokenType.Integer) {
-                    type = "int";
-                } else if (expr.Value.String() == "true" || expr.Value.String() == "false") {
+		switch (expr.Value.Type)
+		{
+			case TokenType.String:
+				type = "string";
+				break;
+			case TokenType.Integer:
+				type = "int";
+				break
+		}
+		    else if (expr.Value.String() == "true" || expr.Value.String() == "false") {
                     type = "bool";
                 }
 
@@ -240,14 +244,15 @@ namespace Scrape.Code.Generation {
 
             foreach (TopLevel structure in top.NamespaceData) {
                 result += Indent();
-
-                if (structure.Type == TopLevelType.Namespace) {
-                    result += Namespace(structure);
-                }
-
-                if (structure.Type == TopLevelType.Class) {
-                    result += Class(structure);
-                }
+		switch (structure.Type)
+		{
+			case TopLevelType.Namespace:
+				result += Namespace(structure);
+				break;
+			case TopLevelType.Class:
+				result += Class(structure);
+				break;
+		}
             }
 
             Context = Context.Parent;
@@ -263,8 +268,7 @@ namespace Scrape.Code.Generation {
 
                 Static = member.Modifiers.Contains("static")
             });
-
-            return member.TypeName + " " + member.Name + " = " + member.Expression.ToString() + ";\n";
+	    return $"{member.TypeName} {member.Name} = {member.Expression.ToString()};\n";
         }
 
         public string Method(ClassMember member) {
