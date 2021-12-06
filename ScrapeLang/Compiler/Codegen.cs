@@ -545,7 +545,7 @@ namespace Scrape.Code.Generation {
         public void Compile() {
             TopLevel top = Parser.TopLevel();
 
-            Output += "#include <scrape.hpp>\n\n";
+            //Output += "#include <scrape.hpp>\n\n";
 
             while (top != null) {
                 if (top.Type == TopLevelType.Namespace) {

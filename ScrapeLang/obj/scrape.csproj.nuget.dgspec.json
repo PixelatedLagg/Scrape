@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\pixil\\Desktop\\Scrape Github\\Scrape\\ScrapeLang\\scrape.csproj": {}
+    "C:\\Users\\pixil\\Desktop\\Scrape Github\\SCrape\\ScrapeLang\\scrape.csproj": {}
   },
   "projects": {
-    "C:\\Users\\pixil\\Desktop\\Scrape Github\\Scrape\\ScrapeLang\\scrape.csproj": {
+    "C:\\Users\\pixil\\Desktop\\Scrape Github\\SCrape\\ScrapeLang\\scrape.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\pixil\\Desktop\\Scrape Github\\Scrape\\ScrapeLang\\scrape.csproj",
+        "projectUniqueName": "C:\\Users\\pixil\\Desktop\\Scrape Github\\SCrape\\ScrapeLang\\scrape.csproj",
         "projectName": "scrape",
-        "projectPath": "C:\\Users\\pixil\\Desktop\\Scrape Github\\Scrape\\ScrapeLang\\scrape.csproj",
+        "projectPath": "C:\\Users\\pixil\\Desktop\\Scrape Github\\SCrape\\ScrapeLang\\scrape.csproj",
         "packagesPath": "C:\\Users\\pixil\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\pixil\\Desktop\\Scrape Github\\Scrape\\ScrapeLang\\obj\\",
+        "outputPath": "C:\\Users\\pixil\\Desktop\\Scrape Github\\SCrape\\ScrapeLang\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\pixil\\AppData\\Roaming\\NuGet\\NuGet.Config"

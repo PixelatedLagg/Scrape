@@ -17,14 +17,14 @@ namespace Scrape
                 argsList.Add(s.ToLower());
             }
             string[] args = argsList.ToArray();
-            if (args.Length == 1)
+            if (args.Length == 2)
             {
                 switch (args[0])
                 {
                     case "new":
                         switch (args[1])
                         {
-                            case "console":
+                            case "terminal":
                                 if (File.Exists($"{Path.Combine(Directory.GetCurrentDirectory(), @"..\..")}\\Program.srp"))
                                 {
                                     Console.WriteLine("This operation will overwrite Program.srp\r\n[Y] or [N] to continue");
@@ -38,10 +38,12 @@ namespace Scrape
                                 }
                                 break;
                             case "--list":
-                                Console.WriteLine($"Installed Scrape Templates: {Global.Templates.Count()}\r\nName:    Desc:    ID:");
+                                Global.Templates = new List<Template>();
+                                DefaultTemplates.Add();
+                                Console.WriteLine($"Installed Scrape Templates: {Global.Templates.Count()}\r\nName:           Desc:                     ID:       ");
                                 foreach (Template template in Global.Templates)
                                 {
-                                    Console.WriteLine($"{template.Name}    {template.Desc}    {template.ID}");
+                                    Console.WriteLine(template.Display);
                                 }
                                 break;
                             default:
