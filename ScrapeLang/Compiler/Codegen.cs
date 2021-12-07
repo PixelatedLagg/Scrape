@@ -140,259 +140,187 @@ namespace Scrape.Code.Generation {
     }
 
     // Generate C++ code from a Scrape program.
-    public class Compiler {
+    public class Compiler 
+    {
         private Parser Parser;
-
         private int IndentLevel = 0;
-
         public string Output = "";
-
         public Scope EntryContext;
-
         public ClassMember Entry;
-
         public Scope Context = new Scope(ScopeType.Namespace);
-
         public List<Scope> Used = new List<Scope>();
-
-        public TypeInfo DeduceType(Expr expr) {
-            if (expr.Type == ExprType.Literal) {
+        public TypeInfo DeduceType(Expr expr) 
+        {
+            if (expr.Type == ExprType.Literal) 
+            {
                 string type = "error";
-		switch (expr.Value.Type)
-		{
-			case TokenType.String:
-				type = "string";
-				break;
-			case TokenType.Integer:
-				type = "int";
-				break
-		}
-		    else if (expr.Value.String() == "true" || expr.Value.String() == "false") {
+                switch (expr.Value.Type)
+                {
+                    case TokenType.String:
+                        type = "string";
+                        break;
+                    case TokenType.Integer:
+                        type = "int";
+                        break;
+                    case TokenType.Identifier:
+                        return Context.Get(expr.Value.String());
+                }
+                if (expr.Value.String() == "true" || expr.Value.String() == "false") 
+                {
                     type = "bool";
                 }
-
-                if (expr.Value.Type == TokenType.Identifier) {
-                    return Context.Get(expr.Value.String());
-                }
-
-                return new TypeInfo {
-                    Name = type
-                };
+                return new TypeInfo {Name = type};
             }
-
-            if (expr.Type == ExprType.New) {
-                return new TypeInfo {
-                    Name = Expression(expr.Subject)
-                };
+            switch (expr.Type)
+            {
+                case ExprType.New:
+                    return new TypeInfo {Name = Expression(expr.Subject)};
+                case ExprType.Call:
+                    TypeInfo method = Context.GetMethod(expr.Value.String());
+                    if (method == null) 
+                    {
+                        throw new Exception("Method not found: " + expr.Value.String());
+                    }
+                    return method;
             }
-
-            if (expr.Type == ExprType.Call) {
-                TypeInfo method = Context.GetMethod(expr.Value.String());
-
-                if (method == null) {
-                    throw new Exception("Method not found: " + expr.Value.String());
-                }
-
-                return method;
-            }
-
             return null;
         }
-
-        private TypeInfo GetType(Expr typepath) {
-            //TypeInfo result = null;
-
+        private TypeInfo GetType(Expr typepath) 
+        {
             Scope scope = Context.Get(typepath.Left?.Type == ExprType.Binary ? GetType(typepath.Left).Name : typepath.Left.Value.String())?.Scope;
-
-            if (scope == null) {
+            if (scope == null) 
+            {
                 throw new Exception("Type not found: " + typepath.Left.Value.String());
             }
-
             return scope.Get(typepath.Right.Value.String());
         }
-
-        public string Indent() {
+        public string Indent() 
+        {
             string result = "";
-
-            for (int i = 0; i < IndentLevel; i++) {
+            for (int i = 0; i < IndentLevel; i++) 
+            {
                 result += "\t";
             }
-
             return result;
         }
-
-        public string Namespace(TopLevel top) {
+        public string Namespace(TopLevel top) 
+        {
             string result = "";
-
             result += "namespace " + top.Name + " {\n";
-
             IndentLevel++;
-
             Context = new Scope(Context, ScopeType.Namespace);
-
             Context.Name = top.Name;
-
-            Context.Parent.DefineNamespace(top.Name, new TypeInfo {
-                Name = top.Name,
-
-                Static = true,
-
-                Namespace = true,
-
-                Scope = Context
-            });
-
-            foreach (TopLevel structure in top.NamespaceData) {
+            Context.Parent.DefineNamespace(top.Name, new TypeInfo {Name = top.Name, Static = true, Namespace = true, Scope = Context});
+            foreach (TopLevel structure in top.NamespaceData) 
+            {
                 result += Indent();
-		switch (structure.Type)
-		{
-			case TopLevelType.Namespace:
-				result += Namespace(structure);
-				break;
-			case TopLevelType.Class:
-				result += Class(structure);
-				break;
-		}
+                switch (structure.Type)
+                {
+                    case TopLevelType.Namespace:
+                        result += Namespace(structure);
+                        break;
+                    case TopLevelType.Class:
+                        result += Class(structure);
+                        break;
+                }
             }
-
             Context = Context.Parent;
-
             IndentLevel--;
-
-            return result + Indent() + "}\n\n";
+            return $"{result}{Indent()}}}\n\n";
         }
-
-        public string Field(ClassMember member) {
-            Context.DefineVar(member.Name, new TypeInfo {
-                Name = member.TypeName,
-
-                Static = member.Modifiers.Contains("static")
-            });
-	    return $"{member.TypeName} {member.Name} = {member.Expression.ToString()};\n";
+        public string Field(ClassMember member) 
+        {
+            Context.DefineVar(member.Name, new TypeInfo {Name = member.TypeName, Static = member.Modifiers.Contains("static")});
+	        return $"{member.TypeName} {member.Name} = {member.Expression.ToString()};\n";
         }
-
-        public string Method(ClassMember member) {
+        public string Method(ClassMember member) 
+        {
             string result = "";
-
-            if (member.Modifiers.Contains("extern") || member.Modifiers.Contains("abstract")) {
-                Context.DefineMethod(member.Name, new TypeInfo {
-                    Name = member.TypeName,
-
-                    Static = member.Modifiers.Contains("static"),
-
-                    Method = true
-                });
-
+            if (member.Modifiers.Contains("extern") || member.Modifiers.Contains("abstract")) 
+            {
+                Context.DefineMethod(member.Name, new TypeInfo {Name = member.TypeName,Static = member.Modifiers.Contains("static"),Method = true});
                 return "";
             }
-
-            foreach (string mod in member.Modifiers) {
-                if (mod == "static" && member.Name != "main") {
+            foreach (string mod in member.Modifiers) 
+            {
+                if (mod == "static" && member.Name != "main") 
+                {
                     result += "static ";
                 }
             }
-
-            result += member.TypeName + " " + member.Name + "(";
-
-            for (int i = 0; i < member.ArgNames.Count; i++) {
+            result += $"{member.TypeName} {member.Name}(";
+            for (int i = 0; i < member.ArgNames.Count; i++) 
+            {
                 result += member.ArgTypes[i] + " " + member.ArgNames[i];
-
-                if (i < member.ArgNames.Count - 1) {
+                if (i < member.ArgNames.Count - 1) 
+                {
                     result += ", ";
                 }
             }
-                
             result += ") {\n";
-
             IndentLevel++;
-
-            Context.DefineMethod(member.Name, new TypeInfo {
-                Name = member.TypeName,
-
-                Static = member.Modifiers.Contains("static"),
-
-                Method = true
-            });
-
+            Context.DefineMethod(member.Name, new TypeInfo {Name = member.TypeName,Static = member.Modifiers.Contains("static"),Method = true});
             Context = new Scope(Context, ScopeType.Method);
-
-            foreach (Stmt st in member.Body) {
+            foreach (Stmt st in member.Body) 
+            {
                 result += Indent();
-
                 result += Statement(st);
             }
-
             Context = Context.Parent;
-
             IndentLevel--;
-
-            return result + Indent() + "}\n\n";
+            return $"{result}{Indent()}}}\n\n";
         }
-
-        public string Statement(Stmt st) {
+        public string Statement(Stmt st) 
+        {
             string result = "";
-
-            if (st.Type == StmtType.Expression) {
-                result += Expression(st.Expression) + ";\n";
-            }
-
-            if (st.Type == StmtType.Return) {
-                result += "return " + Expression(st.Expression) + ";\n";
-            }
-
-            if (st.Type == StmtType.Assignment) {
-                result += $"if ({Expression(st.Path)} != nullptr) {Expression(st.Path)}->S_Handle->Unref();\n";
-
-                result += Expression(st.Path) + " = " + Expression(st.Expression) + ";\n";
-            }
-
-            if (st.Type == StmtType.If) {
-                result += "if (" + Expression(st.Condition) + ") {\n";
-
-                IndentLevel++;
-
-                foreach (Stmt stmt in st.Body) {
-                    result += Indent();
-
-                    result += Statement(stmt);
-                }
-
-                IndentLevel--;
-
-                result += Indent();
-
-                result += "}\n\n";
-            }
-
-            if (st.Type == StmtType.VarDef) {
-                TypeInfo type = Context.GetClass(st.TypeName);
-
-                if (type == null) {
-                    foreach (Scope ns in Used) {
-                        type = ns.GetClass(st.TypeName);
-
-                        if (type != null) {
-                            break;
+            switch (st.Type)
+            {
+                case StmtType.Expression:
+                    result += $"{Expression(st.Expression)};\n";
+                    break;
+                case StmtType.Return:
+                    result += $"return {Expression(st.Expression)};\n";
+                    break;
+                case StmtType.Assignment:
+                    result += $"if ({Expression(st.Path)} != nullptr) {Expression(st.Path)}->S_Handle->Unref();\n{Expression(st.Path)} = {Expression(st.Expression)};\n";
+                    break;
+                case StmtType.If:
+                    result += $"if ({Expression(st.Condition)}) {{\n";
+                    IndentLevel++;
+                    foreach (Stmt stmt in st.Body) 
+                    {
+                        result += $"{Indent()}{Statement(stmt)}";
+                    }
+                    IndentLevel--;
+                    result += $"{Indent()}}}\n\n";
+                    break;
+                case StmtType.VarDef:
+                    TypeInfo type = Context.GetClass(st.TypeName);
+                    if (type == null) 
+                    {
+                        foreach (Scope ns in Used) 
+                        {
+                            type = ns.GetClass(st.TypeName);
+                            if (type != null) 
+                            {
+                                break;
+                            }
                         }
                     }
-                }
-
-                string tname = st.TypeName;
-
-                if (tname != DeduceType(st.Expression).Name) {
-                    throw new Exception($"Type mismatch in variable definition (assigning '{DeduceType(st.Expression).Name}' to '{tname}')");
-                }
-
-                if (type != null) {
-                    tname = type.Name + '*';
-                }
-
-                result += tname + " " + st.Name + " = " + Expression(st.Expression) + ";\n";
+                    string tname = st.TypeName;
+                    if (tname != DeduceType(st.Expression).Name) 
+                    {
+                        throw new Exception($"Type mismatch in variable definition (assigning '{DeduceType(st.Expression).Name}' to '{tname}')");
+                    }
+                    if (type != null) 
+                    {
+                        tname = $"{type.Name}*";
+                    }
+                    result += $"{tname} {st.Name} = {Expression(st.Expression)};\n";
+                    break;
             }
-
             return result;
-        }
-
+        } //will pick up code reformatting tomorrow
         public string Class(TopLevel top) {
             string result = "";
             
