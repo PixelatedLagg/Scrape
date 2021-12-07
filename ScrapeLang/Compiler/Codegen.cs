@@ -2,145 +2,129 @@ using System;
 using System.Collections.Generic;
 using Scrape;
 
-namespace Scrape.Code.Generation {
-
-    public class TypeInfo {
+namespace Scrape.Code.Generation 
+{
+    public class TypeInfo 
+    {
         public string Name;
-
         public bool Static;
-
         public bool Namespace;
-
         public bool Method;
-
         public bool Class;
-
         public Scope Scope;
     }
-
-    public enum ScopeType {
+    public enum ScopeType 
+    {
         Namespace,
         Class,
         Method
     }
-
     // Contain type declarations
-    public class Scope {
+    public class Scope 
+    {
         public string Name;
-
         public ScopeType Type;
-
         public Scope Parent;
-
         public Dictionary<string, TypeInfo> Namespaces = new Dictionary<string, TypeInfo>();
-
         public Dictionary<string, TypeInfo> Methods = new Dictionary<string, TypeInfo>();
-
         public Dictionary<string, TypeInfo> Variables = new Dictionary<string, TypeInfo>();
-
         public Dictionary<string, TypeInfo> Classes = new Dictionary<string, TypeInfo>();
-
-        public void DefineNamespace(string name, TypeInfo info) {
+        public void DefineNamespace(string name, TypeInfo info) 
+        {
             Namespaces[name] = info;
         }
-
         public TypeInfo GetNamespace(string name) {
-            if (Namespaces.ContainsKey(name)) {
+            if (Namespaces.ContainsKey(name)) 
+            {
                 return Namespaces[name];
             }
-
-            if (Parent != null) {
+            if (Parent != null) 
+            {
                 return Parent.GetNamespace(name);
             }
-            
             return null;
         }
-
-        public void DefineMethod(string name, TypeInfo info) {
+        public void DefineMethod(string name, TypeInfo info) 
+        {
             Methods[name] = info;
         }
-
-        public TypeInfo GetMethod(string name) {
-            if (Methods.ContainsKey(name)) {
+        public TypeInfo GetMethod(string name) 
+        {
+            if (Methods.ContainsKey(name)) 
+            {
                 return Methods[name];
             }
-
-            if (Parent != null) {
+            if (Parent != null) 
+            {
                 return Parent.GetMethod(name);
             }
-
             return null;
         }
-
-        public void DefineVar(string name, TypeInfo type) {
+        public void DefineVar(string name, TypeInfo type) 
+        {
             Variables[name] = type;
         }
-
-        public TypeInfo GetVar(string name) {
-            if (Variables.ContainsKey(name)) {
+        public TypeInfo GetVar(string name) 
+        {
+            if (Variables.ContainsKey(name)) 
+            {
                 return Variables[name];
             }
-            
-            if (Parent != null) {
+            if (Parent != null) 
+            {
                 return Parent.GetVar(name);
             }
-
             return null;
         }
-
-        public void DefineClass(string name, TypeInfo info) {
+        public void DefineClass(string name, TypeInfo info) 
+        {
             Classes[name] = info;
         }
-
         public TypeInfo GetClass(string name) {
-            if (Classes.ContainsKey(name)) {
+            if (Classes.ContainsKey(name)) 
+            {
                 return Classes[name];
             }
-
-            if (Parent != null) {
+            if (Parent != null) 
+            {
                 return Parent.GetClass(name);
             }
-
             return null;
         }
-
         public TypeInfo Get(string name) {
-            if (Variables.ContainsKey(name)) {
+            if (Variables.ContainsKey(name)) 
+            {
                 return Variables[name];
             }
-
-            if (Methods.ContainsKey(name)) {
+            if (Methods.ContainsKey(name)) 
+            {
                 return Methods[name];
             }
-
-            if (Namespaces.ContainsKey(name)) {
+            if (Namespaces.ContainsKey(name)) 
+            {
                 return Namespaces[name];
             }
-
-            if (Classes.ContainsKey(name)) {
+            if (Classes.ContainsKey(name)) 
+            {
                 return Classes[name];
             }
-
-            if (Parent != null) {
+            if (Parent != null) 
+            {
                 return Parent.Get(name);
             }
-
             return null;
         }
-
-        public Scope(ScopeType type) {
+        public Scope(ScopeType type) 
+        {
             Type = type;
         }
-
-        public Scope(Scope parent, ScopeType type) {
+        public Scope(Scope parent, ScopeType type) 
+        {
             Parent = parent;
-
             Type = type;
         }
     }
-
-    // Generate C++ code from a Scrape program.
-    public class Compiler 
+    public class Compiler // Generate C++ code from a Scrape program.
     {
         private Parser Parser;
         private int IndentLevel = 0;
@@ -320,197 +304,156 @@ namespace Scrape.Code.Generation {
                     break;
             }
             return result;
-        } //will pick up code reformatting tomorrow
-        public string Class(TopLevel top) {
+        }
+        public string Class(TopLevel top) 
+        {
             string result = "";
-            
             IndentLevel++;
-
-            result += "class " + top.Name + " : S_Object {\n" + Indent() + "public:\n\n";
-
+            result += $"class {top.Name} : S_Object {{\n{Indent()}public:\n\n";
             Context = new Scope(Context, ScopeType.Class);
-
             Context.Name = $"{Context.Parent.Name}::{top.Name}";
-
-            Context.Parent.DefineClass(top.Name, new TypeInfo {
-                Name = top.Name,
-
-                Static = true,
-
-                Class = true,
-
-                Scope = Context
-            });
-
+            Context.Parent.DefineClass(top.Name, new TypeInfo {Name = top.Name, Static = true, Class = true, Scope = Context});
             bool emit = false;
-
-            foreach (ClassMember member in top.ClassData) {
+            foreach (ClassMember member in top.ClassData) 
+            {
                 if (member.Name == "Main" && Global.EntryPoint)
                 {
                     Error.ThrowError("More than one entrypoint specified!");
                 }
-                if (member.Name == "Main") {
+                if (member.Name == "Main") 
+                {
                     Global.EntryPoint = true;
                     member.Name = "main";
-                    
                     EntryContext = Context;
                     Entry = member;
-
                     continue;
                 }
-                if (! member.Modifiers.Contains("abstract") && ! member.Modifiers.Contains("extern")) {
+                if (!member.Modifiers.Contains("abstract") && !member.Modifiers.Contains("extern")) 
+                {
                     emit = true;
                 }
-
                 result += Indent();
-
-                if (member.Type == ClassMemberType.Field) {
+                if (member.Type == ClassMemberType.Field) 
+                {
                     result += Field(member);
-
                     continue;
                 }
-                
                 result += Method(member);
             }
-
             IndentLevel--;
-
-            result += Indent() + "};\n\n";
-
+            result += $"{Indent()}}};\n\n";
             Context = Context.Parent;
-            
             return emit ? result : "";
         }
-
-        public string Expression(Expr expr) {
+        public string Expression(Expr expr) 
+        {
             string result = "";
-
-            if (expr.Type == ExprType.New) {
-                // result += "new " + Expression(expr.Subject) + "(";
-
-                result += $"S_GC::Alloc<{Expression(expr.Subject)}>()";
-
-                for (int i = 0; i < expr.Args.Count; i++) {
-                    result += Expression(expr.Args[i]);
-
-                    if (i < expr.Args.Count - 1) {
-                        result += ", ";
-                    }
-                }
-
-                result += ")";
-            }
-
-            if (expr.Type == ExprType.Binary) {
-                Scope cl = Context.Get(expr.Left.Value.String())?.Scope;
-
-                if (cl == null) {
-                    foreach (Scope ns in Used) {
-                        cl = ns.Get(expr.Left.Value.String())?.Scope;
-
-                        if (cl != null) {
-                            break;
+            switch (expr.Type)
+            {
+                case ExprType.New:
+                    result += $"S_GC::Alloc<{Expression(expr.Subject)}>()";
+                    for (int i = 0; i < expr.Args.Count; i++) 
+                    {
+                        result += Expression(expr.Args[i]);
+                        if (i < expr.Args.Count - 1) 
+                        {
+                            result += ", ";
                         }
                     }
-                }
+                    result += ")";
+                    break;
+                case ExprType.Binary:
+                    Scope cl = Context.Get(expr.Left.Value.String())?.Scope;
+                    if (cl == null) 
+                    {
+                        foreach (Scope ns in Used) {
+                            cl = ns.Get(expr.Left.Value.String())?.Scope;
 
-                TypeInfo righttype = cl?.Get(expr.Right.Value.String());
-
-                // C++ uses :: instead of . for static members
-                if (expr.Op.String() == "." && cl != null && righttype != null && righttype.Static) {
-                    result += Expression(expr.Left);
-
-                    result += "::";
-                } else {
-                    if (expr.Op.String() == ".") {
-                        result += "(*" + Expression(expr.Left) + ")[\"";
+                            if (cl != null) {
+                                break;
+                            }
+                        }
                     }
-                    else {
-                        result += Expression(expr.Left);
-
-                        result += $" {expr.Op.String()} ";
+                    TypeInfo righttype = cl?.Get(expr.Right.Value.String());
+                    if (expr.Op.String() == "." && cl != null && righttype != null && righttype.Static) 
+                    {
+                        result += $"{Expression(expr.Left)}::";
+                    } 
+                    else 
+                    {
+                        if (expr.Op.String() == ".") 
+                        {
+                            result += $"(*{Expression(expr.Left)})[\"";
+                        }
+                        else 
+                        {
+                            result += $"{Expression(expr.Left)} {expr.Op.String()} ";
+                        }
                     }
-                }
-
-                result += Expression(expr.Right);
-
-                if (expr.Op.String() == "." && righttype?.Static == null || righttype?.Static == false) {
-                    result += "\"]";
-                }
-
-                return result;
-            }
-
-            if (expr.Type == ExprType.Call) {
-                result += Expression(expr.Subject) + "(";
-
-                for (int i = 0; i < expr.Args.Count; i++) {
-                    result += Expression(expr.Args[i]);
-
-                    if (i < expr.Args.Count - 1) {
-                        result += ", ";
+                    result += Expression(expr.Right);
+                    if (expr.Op.String() == "." && righttype?.Static == null || righttype?.Static == false) 
+                    {
+                        result += "\"]";
                     }
-                }
-
-                result += ")";
-
-                return result;
-            }
-
-			if (expr.Type == ExprType.Index) {
-				return $"(*{Expression(expr.Subject)})[{Expression(expr.Index)}]";
-			}
-
-            if (expr.Type == ExprType.Literal) {
-                if (expr.Value.Type == TokenType.String) {
-                    result += "\"" + expr.Value.String() + "\"";
-
                     return result;
-                }
-
-                result += expr.Value.String();
+                case ExprType.Call:
+                    result += Expression(expr.Subject) + "(";
+                    for (int i = 0; i < expr.Args.Count; i++) 
+                    {
+                        result += Expression(expr.Args[i]);
+                        if (i < expr.Args.Count - 1) 
+                        {
+                            result += ", ";
+                        }
+                    }
+                    result += ")";
+                    return result;
+                case ExprType.Index:
+                    return $"(*{Expression(expr.Subject)})[{Expression(expr.Index)}]";
+                case ExprType.Literal:  
+                    if (expr.Value.Type == TokenType.String) 
+                    {
+                        result += $"\"{expr.Value.String()}\"";
+                        return result;
+                    }
+                    result += expr.Value.String();
+                    break;
             }
-
             return result;
         }
-
-        public void Compile() {
+        public void Compile() 
+        {
             TopLevel top = Parser.TopLevel();
-
-            //Output += "#include <scrape.hpp>\n\n";
-
-            while (top != null) {
-                if (top.Type == TopLevelType.Namespace) {
-                    Output += Namespace(top);
+            while (top != null) 
+            {
+                switch (top.Type)
+                {
+                    case TopLevelType.Namespace:
+                        Output += Namespace(top);
+                        break;
+                    case TopLevelType.Class:
+                        Output += Class(top);
+                        break;
+                    case TopLevelType.Using:
+                        string path = Expression(top.Path);
+                        if (Context.GetNamespace(path) != null) 
+                        {
+                            Used.Add(Context.GetNamespace(path).Scope);
+                        }
+                        Output += $"using namespace {path};\n\n";
+                        break;
                 }
-
-                if (top.Type == TopLevelType.Class) {
-                    Output += Class(top);
-                }
-
-                if (top.Type == TopLevelType.Using) {
-                    string path = Expression(top.Path);
-
-                    if (Context.GetNamespace(path) != null) {
-                        Used.Add(Context.GetNamespace(path).Scope);
-                    }
-
-                    Output += "using namespace " + path + ";\n\n";
-                }
-
                 top = Parser.TopLevel();
             }
-
-			if (EntryContext != null) {
+			if (EntryContext != null) 
+            {
 				Output += $"using namespace {EntryContext.Parent.Name};\n\n";
-
 				Context = EntryContext;
-
 				Output += Method(Entry);
 			}
         }
-
-        public Compiler(string source) {
+        public Compiler(string source) 
+        {
             Parser = new Parser(source);
         }
     }
