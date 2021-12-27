@@ -85,7 +85,6 @@ namespace Scrape
                         {
                             Error.CLIError("No entrypoint specified");
                         }
-                        //run generated files here
                         break;
                     case "build":
                         Global.EntryPoint = false;
@@ -111,7 +110,6 @@ namespace Scrape
                         {
                             Error.CLIError("No entrypoint specified");
                         }
-                        //build generated files into exe here
                         Console.ForegroundColor = ConsoleColor.Green;
                         Console.WriteLine("Build Successful");
                         Console.ForegroundColor = ConsoleColor.Gray;
