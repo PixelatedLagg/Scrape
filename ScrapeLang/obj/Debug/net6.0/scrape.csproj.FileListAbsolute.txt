@@ -13,3 +13,9 @@ C:\Users\pixil\Desktop\Scrape Github\Scrape\ScrapeLang\obj\Debug\net6.0\scrape.d
 C:\Users\pixil\Desktop\Scrape Github\Scrape\ScrapeLang\obj\Debug\net6.0\ref\scrape.dll
 C:\Users\pixil\Desktop\Scrape Github\Scrape\ScrapeLang\obj\Debug\net6.0\scrape.pdb
 C:\Users\pixil\Desktop\Scrape Github\Scrape\ScrapeLang\obj\Debug\net6.0\scrape.genruntimeconfig.cache
+C:\Users\pixil\Desktop\Scrape Github\Scrape\ScrapeLang\bin\Debug\net6.0\scrape.exe
+C:\Users\pixil\Desktop\Scrape Github\Scrape\ScrapeLang\bin\Debug\net6.0\scrape.deps.json
+C:\Users\pixil\Desktop\Scrape Github\Scrape\ScrapeLang\bin\Debug\net6.0\scrape.runtimeconfig.json
+C:\Users\pixil\Desktop\Scrape Github\Scrape\ScrapeLang\bin\Debug\net6.0\scrape.dll
+C:\Users\pixil\Desktop\Scrape Github\Scrape\ScrapeLang\bin\Debug\net6.0\ref\scrape.dll
+C:\Users\pixil\Desktop\Scrape Github\Scrape\ScrapeLang\bin\Debug\net6.0\scrape.pdb

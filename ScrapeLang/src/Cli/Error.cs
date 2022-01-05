@@ -1,6 +1,6 @@
 using System;
 
-namespace Scrape
+namespace Scrape.Cli
 {
     public static class Error
     {
@@ -23,6 +23,7 @@ namespace Scrape
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"CLI Error: {error}");
             Console.ForegroundColor = ConsoleColor.Gray;
+            Environment.Exit(0);
         }
         public static void ThrowWarning(string warning)
         {

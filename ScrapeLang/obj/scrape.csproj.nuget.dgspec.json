@@ -1,25 +1,31 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\pixil\\Desktop\\Scrape Github\\SCrape\\ScrapeLang\\scrape.csproj": {}
+    "C:\\Users\\pixil\\Desktop\\Scrape Github\\Scrape\\ScrapeLang\\scrape.csproj": {}
   },
   "projects": {
-    "C:\\Users\\pixil\\Desktop\\Scrape Github\\SCrape\\ScrapeLang\\scrape.csproj": {
+    "C:\\Users\\pixil\\Desktop\\Scrape Github\\Scrape\\ScrapeLang\\scrape.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\pixil\\Desktop\\Scrape Github\\SCrape\\ScrapeLang\\scrape.csproj",
+        "projectUniqueName": "C:\\Users\\pixil\\Desktop\\Scrape Github\\Scrape\\ScrapeLang\\scrape.csproj",
         "projectName": "scrape",
-        "projectPath": "C:\\Users\\pixil\\Desktop\\Scrape Github\\SCrape\\ScrapeLang\\scrape.csproj",
+        "projectPath": "C:\\Users\\pixil\\Desktop\\Scrape Github\\Scrape\\ScrapeLang\\scrape.csproj",
         "packagesPath": "C:\\Users\\pixil\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\pixil\\Desktop\\Scrape Github\\SCrape\\ScrapeLang\\obj\\",
+        "outputPath": "C:\\Users\\pixil\\Desktop\\Scrape Github\\Scrape\\ScrapeLang\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\pixil\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\pixil\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net6.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {

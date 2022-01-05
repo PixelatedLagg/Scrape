@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
+using Scrape.Cli;
 
-namespace Scrape 
+namespace Scrape.Code.Generation 
 {
 	public enum ExprType 
 	{

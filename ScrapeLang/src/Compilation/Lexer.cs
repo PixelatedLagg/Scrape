@@ -1,6 +1,7 @@
 using System;
+using Scrape.Cli;
 
-namespace Scrape
+namespace Scrape.Code.Generation
 {
 	public enum TokenType 
 	{

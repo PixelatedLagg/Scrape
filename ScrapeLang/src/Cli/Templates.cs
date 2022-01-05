@@ -1,4 +1,6 @@
-namespace Scrape
+using Scrape.Code.Generation;
+
+namespace Scrape.Cli
 {
     public struct Template
     {
