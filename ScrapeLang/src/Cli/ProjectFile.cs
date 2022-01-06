@@ -1,7 +1,5 @@
 using System.IO;
-using System;
-using Scrape.Code.Generation;
-using System.Collections.Generic;
+using System.Text;
 
 namespace Scrape.Cli
 {
@@ -26,52 +24,50 @@ namespace Scrape.Cli
             {
                 Error.CLIError("No project file in directory");
             }
-            ReadData();
-        }
-        private static void ReadData()
-        {
-            string text = File.ReadAllText(Global.ProjectFile);
-            string value = "";
-            Rules? currentRule = null;
-            List<Rules?> setRules = new List<Rules?>();
-            foreach (char c in text)
+            StringBuilder property = new StringBuilder(100); 
+            StringBuilder value = new StringBuilder(100);
+            StringBuilder text = new StringBuilder(File.ReadAllText(Global.ProjectFile).Length);
+            bool read = true; 
+            using (StreamReader sr = new StreamReader(Global.ProjectFile))
             {
-                switch (c)
+                while (!sr.EndOfStream)
                 {
-                    case ' ':
-                        continue;
-                    case '=':
-                        if (setRules.Contains(currentRule))
-                        {
-                            Error.CLIError("Already set sproj file property");
-                        }
-                        switch (value)
-                        {
-                            case "outputname":
-                                currentRule = Rules.OutputFolderName;
-                                value = "";
-                                setRules.Add(currentRule);
-                                break;
-                            default:
-                                Error.CLIError("Invalid sproj file property");
-                                break;
-                        }
-                        continue;
-                    case ';':
-                        ChangeRule(currentRule, value);
-                        value = "";
-                        continue;
+                    text.Append(sr.ReadLine());
                 }
-                value += c;
+                sr.Close();
             }
-        }
-        private static void ChangeRule(Rules? rule, string arg)
-        {
-            switch (rule)
+            foreach (char c in text.ToString())
             {
-                case Rules.OutputFolderName:
-                    Global.OutputFolderName = arg;
-                    break;
+                if (c == ' ')
+                {
+                    continue;
+                }
+                if (c == ';')
+                {
+                    read = true;
+                    switch (property.ToString())
+                    {
+                        case "outputname":
+                            Global.OutputFolderName = value.ToString();
+                            break;
+                    }
+                    property.Clear();
+                    value.Clear();
+                    continue;
+                }
+                if (c == '=')
+                {
+                    read = false;
+                    continue;
+                }
+                if (read)
+                {
+                    property.Append(c);
+                }
+                else
+                {
+                    value.Append(c);
+                }
             }
         }
     }
