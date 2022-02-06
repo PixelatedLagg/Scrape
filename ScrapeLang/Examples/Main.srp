@@ -1,19 +1,21 @@
-using StandardLib; //referencing namespace
+using StandardLib;
 
-namespace Program //namespace
-{
-    class ExampleClass //class
-    {
-        method Main() //method
-        {
-            int example = ExampleInt(1); //int assigned return value from int method
-        }
-        int ExampleInt(int number) //int method with parameter
-        {
-            number--; //-- operator
-            number++; //++ operator
-            number = 3; //assigning the int a value
-            return number; //return the value
+namespace Program {
+	class Other {
+		int member = 30;
+	}
+
+	class TestClass {
+		int i = 15;
+
+		Other nest = new Other();
+	}
+
+    class ExampleClass {
+        int Main() {
+			TestClass test = new TestClass();
+
+			return test.nest.member;
         }
     }
 }

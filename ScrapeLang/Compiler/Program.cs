@@ -10,22 +10,39 @@ namespace Scrape
         static void Main(string[] args) 
         {
             Global.Entrypoint = false;
-            foreach (string file in Directory.GetFiles(Path.Combine(Directory.GetCurrentDirectory(), @"..\..")))
+
+			if (args.Length < 1) {
+				Console.WriteLine("Usage: scrape <input>");
+
+				return;
+			}
+
+			Console.WriteLine("Compiling");
+
+            foreach (string file in Directory.GetFiles(Path.Combine(Directory.GetCurrentDirectory(), args[0])))
             {
                 if (Path.GetExtension(file) == ".srp")
                 {
-                    Compiler compiler;
+                    LLVMCompiler compiler;
+
                     using (StreamReader reader = new StreamReader(file)) 
                     {
-                        compiler = new Compiler(reader.ReadToEnd());
+                        compiler = new LLVMCompiler(reader.ReadToEnd());
                     }
-                    compiler.Compile();
+
+					compiler.Compile();
+
+					// LLVMSharp.LLVM.DumpModule(compiler.CurrentModule);
+
+                    /*compiler.Compile();
+
                     using (StreamWriter writer = new StreamWriter($"{Path.GetFileNameWithoutExtension(file)}.cpp")) 
                     {
                         writer.Write(compiler.Output);
-                    }
+                    }*/
                 }
             }
+
             if (!Global.Entrypoint)
             {
                 throw new CompileError("no entrypoint provided!");

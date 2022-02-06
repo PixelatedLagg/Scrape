@@ -644,6 +644,12 @@ namespace Scrape {
 
 					result.Expression = Expression();
 
+					if (Source.PeekToken().Type != TokenType.Semicolon) {
+						throw new SyntaxError("Expected [;] after field", Source.GetToken());
+					}
+
+					Source.GetToken(); // ;
+
 					return result;
 				}
 
@@ -726,6 +732,30 @@ namespace Scrape {
 
 		public Expr Expression(bool dot = false) {
 			Operands.Push(Primary());
+
+			if (Source.PeekToken().Type == TokenType.LParen && ! dot) {
+				Source.GetToken(); // (
+
+				List<Expr> args = new List<Expr>();
+
+				if (! Source.PeekToken().Is(TokenType.RParen, ")")) {
+					args.Add(Expression());
+
+					while (Source.PeekToken().Is(TokenType.Comma, ",")) {
+						if (Source.PeekToken().Type == TokenType.EOF) {
+							throw new SyntaxError("Expected [)] after argument list", Source.GetToken());
+						}
+
+						Source.GetToken(); // ,
+
+						args.Add(Expression());
+					}
+				}
+
+				Source.GetToken(); // )
+
+				Operands.Push(new Expr(Operands.Pop(), args));
+			}
 
 			while (Source.PeekToken().Type == TokenType.Operator && OperatorDefs.ContainsKey(Source.PeekToken().String())) {
 				OperatorDescriptor op = OperatorDefs[Source.PeekToken().String()];
