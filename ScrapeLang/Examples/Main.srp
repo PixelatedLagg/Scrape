@@ -1,0 +1,21 @@
+using StandardLib;
+
+namespace Program {
+	class Other {
+		int member = 30;
+	}
+
+	class TestClass {
+		int i = 15;
+
+		Other nest = new Other();
+	}
+
+    class ExampleClass {
+        int Main() {
+			TestClass test = new TestClass();
+
+			return test.nest.member;
+        }
+    }
+}

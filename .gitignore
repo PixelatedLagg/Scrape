@@ -1,0 +1,11 @@
+#ignore exe
+scrape
+
+#ignore essential c# files
+ScrapeLang/bin/*
+ScrapeLang/obj/*
+ScrapeRuntime/bin/*
+ScrapeRuntime/obj/*
+
+#ignore generated c++ file
+ScrapeLang/ScrapeLang/generated.cpp
