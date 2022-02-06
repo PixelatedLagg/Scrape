@@ -12,8 +12,12 @@ namespace Program {
 	}
 
     class ExampleClass {
-        int Main() {
+		extern void abort();
+
+        int main() {
 			TestClass test = new TestClass();
+
+			abort();
 
 			return test.nest.member;
         }

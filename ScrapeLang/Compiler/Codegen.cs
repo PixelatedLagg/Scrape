@@ -234,6 +234,12 @@ namespace Scrape.Code.Generation {
 		private TypeInfo GetType(Expr typepath) {
 			//TypeInfo result = null;
 
+			if (typepath.Value.String() == "int") {
+				return new TypeInfo {
+					Name = "int"
+				};
+			}
+
 			if (typepath.Left == null) {
 				return Context.Get(typepath.Value.String());
 			}
@@ -412,6 +418,18 @@ namespace Scrape.Code.Generation {
 					LLVMValue = LLVM.GetParam(fn, (uint) i)
 				});
             }
+
+			if (member.Modifiers.Contains("extern")) {
+				Context = Context.Parent;
+
+				fn.SetLinkage(LLVMLinkage.LLVMExternalLinkage);
+
+				fn.SetExternallyInitialized(true);
+
+				fn.Dump();
+				
+				return;
+			}
 
 			LLVMBuilderRef builder = LLVM.CreateBuilder();
 
@@ -599,6 +617,8 @@ namespace Scrape.Code.Generation {
 			LLVM.InitializeX86Target();
 			LLVM.InitializeX86AsmParser();
 			LLVM.InitializeX86AsmPrinter();
+			LLVM.InitializeX86TargetInfo();
+			LLVM.InitializeX86TargetMC();
 
             while (top != null) {
                 if (top.Type == TopLevelType.Namespace) {
@@ -626,14 +646,30 @@ namespace Scrape.Code.Generation {
 
 			// Console.WriteLine(LLVM.CreateMCJITCompilerForModule(out engine, CurrentModule, new LLVMMCJITCompilerOptions(), out msg));
 
-			LLVM.CreateExecutionEngineForModule(out engine, CurrentModule, out msg);
+			/*LLVM.CreateExecutionEngineForModule(out engine, CurrentModule, out msg);
 
 			LLVMGenericValueRef val = LLVM.RunFunction(engine, LLVM.GetNamedFunction(CurrentModule, "Main"), new LLVMGenericValueRef[] { });
 
 			// Get int from genericvalueref
 			int ret = (int) LLVM.GenericValueToInt(val, true);
 
-			Console.WriteLine("Returned: " + ret);
+			Console.WriteLine("Returned: " + ret);*/
+
+			LLVM.SetTarget(CurrentModule, "x86_64-unknown-linux-elf");
+
+			LLVMTargetRef target;
+
+			LLVM.GetTargetFromTriple("x86_64-unknown-linux-elf", out target, out msg);
+
+			Console.WriteLine(msg);
+
+			LLVMTargetMachineRef machine = LLVM.CreateTargetMachine(target, "x86_64-unknown-linux-elf", "generic", "", LLVMCodeGenOptLevel.LLVMCodeGenLevelDefault, LLVMRelocMode.LLVMRelocDefault, LLVMCodeModel.LLVMCodeModelDefault);
+
+			LLVM.TargetMachineEmitToFile(machine, CurrentModule, Marshal.StringToHGlobalAnsi("object.o"), LLVMCodeGenFileType.LLVMObjectFile, out msg);
+
+			LLVM.DisposeTargetMachine(machine);
+
+
 
 			if (EntryContext != null) {
 				Context = EntryContext;
