@@ -8,18 +8,30 @@ namespace Program {
 	class TestClass {
 		int i = 15;
 
+		string str = "Wow!\n";
+
+		string o = "Tet";
+
 		Other nest = new Other();
+
+		int Inst(int ii) {
+			return this.i + ii;
+		}
+
+		int Instance() {
+			return Inst(2);
+		}
 	}
 
     class ExampleClass {
-		extern void abort();
+		extern static int puts(string message);
 
-        int main() {
+		extern static void abort();
+
+        public static int main() {
 			TestClass test = new TestClass();
 
-			abort();
-
-			return test.nest.member;
+			return 0;
         }
     }
 }

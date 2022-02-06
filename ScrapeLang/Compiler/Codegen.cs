@@ -169,7 +169,9 @@ namespace Scrape.Code.Generation {
 
         public Scope Context = new Scope(ScopeType.Namespace);
 
-		public LLVMModuleRef CurrentModule;
+		public LLVMModuleRef Module;
+
+		public LLVMValueRef Function;
 
 		public Dictionary<string, LLVMModuleRef> Namespaces = new Dictionary<string, LLVMModuleRef>();
 
@@ -240,6 +242,12 @@ namespace Scrape.Code.Generation {
 				};
 			}
 
+			if (typepath.Value.String() == "string") {
+				return new TypeInfo {
+					Name = "string"
+				};
+			}
+
 			if (typepath.Left == null) {
 				return Context.Get(typepath.Value.String());
 			}
@@ -254,13 +262,13 @@ namespace Scrape.Code.Generation {
 		}
 
 		public LLVMModuleRef Namespace(TopLevel top) {
-            LLVMModuleRef prev = CurrentModule;
+            LLVMModuleRef prev = Module;
 
             Context = new Scope(Context, ScopeType.Namespace);
 
             Context.Name = top.Name;
 
-			CurrentModule = LLVM.ModuleCreateWithName(top.Name);
+			Module = LLVM.ModuleCreateWithName(top.Name);
 
             Context.Parent.DefineNamespace(top.Name, new TypeInfo {
                 Name = top.Name,
@@ -283,19 +291,19 @@ namespace Scrape.Code.Generation {
                 }
             }
 
-			LLVMModuleRef mod = CurrentModule;
+			LLVMModuleRef mod = Module;
 
             Context = Context.Parent;
 
 			mod = prev;
 
-			return CurrentModule;
+			return Module;
         }
 
 		public void Class(TopLevel top) {
             Context = new Scope(Context, ScopeType.Class);
 
-            Context.Name = $"{Context.Parent.Name}::{top.Name}";
+            Context.Name = top.Name;
 
 			// LLVM Class Generation
 
@@ -316,8 +324,6 @@ namespace Scrape.Code.Generation {
 
                     continue;
                 }
-                
-            	Method(member);
             }
 
 			LLVMTypeRef[] fieldTypes = fields.ToArray();
@@ -337,6 +343,13 @@ namespace Scrape.Code.Generation {
 
 				LLVMType = classType
             });
+
+			foreach (ClassMember member in top.ClassData) {
+                if (member.Type == ClassMemberType.Field)
+                    continue;
+                
+            	Method(member, classType);
+            }
 
             Context = Context.Parent;
         }
@@ -386,8 +399,12 @@ namespace Scrape.Code.Generation {
         }
 
 		// Adds function to current module
-		public void Method(ClassMember member) {
+		public void Method(ClassMember member, LLVMTypeRef classtype) {
 			List<LLVMTypeRef> args = new List<LLVMTypeRef>();
+
+			if (! member.Modifiers.Contains("static")) {
+				args.Add(LLVM.PointerType(classtype, 0));
+			}
 
             foreach (Expr arg in member.ArgTypes) {
 				args.Add(TypeNameToLLVMType(GetType(arg).Name));
@@ -395,7 +412,11 @@ namespace Scrape.Code.Generation {
 
 			LLVMTypeRef fntype = LLVM.FunctionType(TypeNameToLLVMType(member.TypeName), args.ToArray(), false);
 
-			LLVMValueRef fn = LLVM.AddFunction(CurrentModule, member.Name, fntype);
+			LLVMValueRef fn = LLVM.AddFunction(Module, member.Name, fntype);
+
+			LLVMValueRef prev = Function;
+
+			Function = fn;
 
             Context.DefineMethod(member.Name, new TypeInfo {
                 Name = member.TypeName,
@@ -409,24 +430,34 @@ namespace Scrape.Code.Generation {
 
             Context = new Scope(Context, ScopeType.Method);
 
+			if (! member.Modifiers.Contains("static")) {
+				Context.DefineClass("this", new TypeInfo {
+					Name = Context.Parent.Name,
+
+					Static = member.Modifiers.Contains("static"),
+
+					Class = true,
+
+					Scope = Context.Parent
+				});
+			}
+
 			for (int i = 0; i < member.ArgNames.Count; i++) {
                 Context.DefineVar(member.ArgNames[i], new TypeInfo {
 					Name = member.ArgTypes[i].Value.String(),
 
 					Argument = true,
 
-					LLVMValue = LLVM.GetParam(fn, (uint) i)
+					LLVMValue = LLVM.GetParam(fn, (uint) (i + (! member.Modifiers.Contains("static") ? 1 : 0)))
 				});
             }
 
 			if (member.Modifiers.Contains("extern")) {
 				Context = Context.Parent;
 
+				Function = prev;
+				
 				fn.SetLinkage(LLVMLinkage.LLVMExternalLinkage);
-
-				fn.SetExternallyInitialized(true);
-
-				fn.Dump();
 				
 				return;
 			}
@@ -446,17 +477,19 @@ namespace Scrape.Code.Generation {
 			// LLVM.DisposeBuilder(builder);
 
             Context = Context.Parent;
+
+			Function = prev;
         }
 
 		public void Statement(LLVMBuilderRef builder, Stmt st) {
             if (st.Type == StmtType.Expression) {
-                
+                Expression(builder, st.Expression);
             }
 
             if (st.Type == StmtType.Return) {
+				Console.WriteLine("Return");
+				
                LLVM.BuildRet(builder, Expression(builder, st.Expression));
-
-			   Console.WriteLine("Returned");
             }
 
             if (st.Type == StmtType.Assignment) {
@@ -507,6 +540,8 @@ namespace Scrape.Code.Generation {
 				LLVM.BuildStore(builder, Expression(builder, st.Expression), stack);
 			}
         }
+
+		LLVMValueRef TempObject;
 
 		public LLVMValueRef Expression(LLVMBuilderRef builder, Expr expr) {
             if (expr.Type == ExprType.New) {
@@ -567,9 +602,17 @@ namespace Scrape.Code.Generation {
 
 					TypeInfo right = tinfo.Scope.Get(expr.Right.Value.String());
 
-					Console.WriteLine($"{tinfo.Name} {expr.Right.Value.String()} {right.FieldIndex}");
+					if (right.Method) {
+						Console.WriteLine("Method DOT");
+
+						TempObject = Expression(builder, expr.Left);
+
+						return LLVM.GetNamedFunction(Module, expr.Right.Value.String());
+					}
 
 					LLVMValueRef ptr = Expression(builder, expr.Left);
+
+					ptr.Dump();
 
 					return LLVM.BuildLoad(builder, LLVM.BuildStructGEP(builder, ptr, (uint) right.FieldIndex, right.Name), "field");
 				}
@@ -578,11 +621,24 @@ namespace Scrape.Code.Generation {
             if (expr.Type == ExprType.Call) {
 				List<LLVMValueRef> args = new List<LLVMValueRef>();
 
+				TypeInfo type = DeduceType(expr.Subject);
+
+				LLVMValueRef fn = Expression(builder, expr.Subject);
+
+				if (! type.Static) {
+					if (TempObject.Pointer != IntPtr.Zero)
+						args.Add(TempObject);
+					else
+						args.Add(LLVM.GetParam(Function, 0));
+				}
+
+				TempObject = new LLVMValueRef(IntPtr.Zero);
+
 				foreach (Expr arg in expr.Args) {
 					args.Add(Expression(builder, arg));
 				}
 
-            	return LLVM.BuildCall(builder, LLVM.GetNamedFunction(CurrentModule, expr.Subject.Value.String()), args.ToArray(), "call");
+            	return LLVM.BuildCall(builder, fn, args.ToArray(), "");
             }
 
 			if (expr.Type == ExprType.Index) {
@@ -591,7 +647,16 @@ namespace Scrape.Code.Generation {
 
             if (expr.Type == ExprType.Literal) {
 				if (expr.Value.Type == TokenType.Identifier) {
+					if (expr.Value.String() == "this") {
+						return LLVM.GetParam(Function, 0);
+					}
+
 					TypeInfo tinfo = Context.Get(expr.Value.String());
+
+					if (tinfo != null && tinfo.Method) {
+						Console.WriteLine("Subject " + expr.Value.String());
+						return LLVM.GetNamedFunction(Module, expr.Value.String());
+					}
 
 					if (tinfo != null && tinfo.Argument)
 						return tinfo.LLVMValue;
@@ -599,9 +664,11 @@ namespace Scrape.Code.Generation {
 					return LLVM.BuildLoad(builder, tinfo.LLVMValue, "load");
 				}
 
-                if (expr.Value.Type == TokenType.Integer) {
-					Console.WriteLine("Const");
+				if (expr.Value.Type == TokenType.String) {
+					return LLVM.BuildGlobalStringPtr(builder, expr.Value.String(), "str");
+				}
 
+                if (expr.Value.Type == TokenType.Integer) {
 					return LLVM.ConstInt(LLVM.Int32Type(), (ulong) expr.Value.Integer(), false);
 				}
             }
@@ -638,24 +705,22 @@ namespace Scrape.Code.Generation {
 
 			string msg;
 
-			LLVM.VerifyModule(CurrentModule, LLVMVerifierFailureAction.LLVMPrintMessageAction, out msg);
+			LLVM.VerifyModule(Module, LLVMVerifierFailureAction.LLVMPrintMessageAction, out msg);
 
 			Console.WriteLine("LLVM Message: " + msg);
 
-			LLVMExecutionEngineRef engine;
+			// Console.WriteLine(LLVM.CreateMCJITCompilerForModule(out engine, Module, new LLVMMCJITCompilerOptions(), out msg));
 
-			// Console.WriteLine(LLVM.CreateMCJITCompilerForModule(out engine, CurrentModule, new LLVMMCJITCompilerOptions(), out msg));
+			/*LLVM.CreateExecutionEngineForModule(out engine, Module, out msg);
 
-			/*LLVM.CreateExecutionEngineForModule(out engine, CurrentModule, out msg);
-
-			LLVMGenericValueRef val = LLVM.RunFunction(engine, LLVM.GetNamedFunction(CurrentModule, "Main"), new LLVMGenericValueRef[] { });
+			LLVMGenericValueRef val = LLVM.RunFunction(engine, LLVM.GetNamedFunction(Module, "Main"), new LLVMGenericValueRef[] { });
 
 			// Get int from genericvalueref
 			int ret = (int) LLVM.GenericValueToInt(val, true);
 
 			Console.WriteLine("Returned: " + ret);*/
 
-			LLVM.SetTarget(CurrentModule, "x86_64-unknown-linux-elf");
+			LLVM.SetTarget(Module, "x86_64-unknown-linux-elf");
 
 			LLVMTargetRef target;
 
@@ -665,7 +730,7 @@ namespace Scrape.Code.Generation {
 
 			LLVMTargetMachineRef machine = LLVM.CreateTargetMachine(target, "x86_64-unknown-linux-elf", "generic", "", LLVMCodeGenOptLevel.LLVMCodeGenLevelDefault, LLVMRelocMode.LLVMRelocDefault, LLVMCodeModel.LLVMCodeModelDefault);
 
-			LLVM.TargetMachineEmitToFile(machine, CurrentModule, Marshal.StringToHGlobalAnsi("object.o"), LLVMCodeGenFileType.LLVMObjectFile, out msg);
+			LLVM.TargetMachineEmitToFile(machine, Module, Marshal.StringToHGlobalAnsi("object.o"), LLVMCodeGenFileType.LLVMObjectFile, out msg);
 
 			LLVM.DisposeTargetMachine(machine);
 
@@ -681,7 +746,7 @@ namespace Scrape.Code.Generation {
 		public LLVMCompiler(string source) {
 			Parser = new Parser(source);
 
-			CurrentModule = LLVM.ModuleCreateWithName("_Main");
+			Module = LLVM.ModuleCreateWithName("_Main");
 
 			/*Context.DefineClass("int", new TypeInfo {
 				Name = "int",

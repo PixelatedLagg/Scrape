@@ -32,7 +32,7 @@ namespace Scrape
 
 					compiler.Compile();
 
-					// LLVMSharp.LLVM.DumpModule(compiler.CurrentModule);
+					// LLVMSharp.LLVM.DumpModule(compiler.Module);
 
                     /*compiler.Compile();
 

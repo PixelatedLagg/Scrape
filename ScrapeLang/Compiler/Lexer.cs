@@ -180,9 +180,57 @@ namespace Scrape
 			if (c == '"') {
 				Get();
 
-				Token tok = new Token(TokenType.String, Line, Column, ReadUntil(ch => ch == '"', "\""));
+				string str = "";
+
+				while (Peek() != '"') {
+					if (Peek() == '\0') {
+						throw new ParseException(Line, Column, "Expected '\"' but got 'EOF'");
+					}
+
+					if (Peek() == '\\') {
+						Get();
+
+						if (Peek() == 'n') {
+							str += '\n';
+
+							Get();
+
+							continue;
+						}
+						
+						if (Peek() == 't') {
+							str += '\t';
+
+							Get();
+
+							continue;
+						}
+
+						if (Peek() == 'r') {
+							str += '\r';
+
+							Get();
+							
+							continue;
+						}
+						
+						if (Peek() == '"') {
+							str += '"';
+
+							Get();
+
+							continue;
+						}
+						
+						throw new ParseException(Line, Column, "Invalid escape sequence");
+					}
+
+					str += Get();
+				}
 
 				Get();
+
+				Token tok = new Token(TokenType.String, Line, Column, str);
 
 				return tok;
 			}
