@@ -6,6 +6,7 @@ ScrapeLang/bin/*
 ScrapeLang/obj/*
 ScrapeLang/a.out
 ScrapeLang/object.o
+ScrapeLang/out.ll
 ScrapeRuntime/bin/*
 ScrapeRuntime/obj/*
 

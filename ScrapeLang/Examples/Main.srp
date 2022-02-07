@@ -28,8 +28,22 @@ namespace Program {
 
 		extern static void abort();
 
-        public static int main() {
+        public static int main(int argc, char[0][0] argv) {
 			TestClass test = new TestClass();
+
+			int i = 3;
+
+			int g = 1;
+
+			while (g == 1) {
+				i = i - 1;
+
+				puts("Loop");
+
+				if (i == 0) {
+					g = 0;
+				}
+			}
 
 			return 0;
         }

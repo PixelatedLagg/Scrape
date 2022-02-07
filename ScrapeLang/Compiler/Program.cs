@@ -19,14 +19,23 @@ namespace Scrape
                 case "run":
                     foreach (string file in Directory.GetFiles(Directory.GetCurrentDirectory(), "*.srp", SearchOption.AllDirectories))
                     {
-                        /*
+                        
                         LLVMCompiler compiler;
+
                         using (StreamReader reader = new StreamReader(file)) 
                         {
                             compiler = new LLVMCompiler(reader.ReadToEnd());
                         }
+
                         compiler.Compile();
-                        LLVMSharp.LLVM.DumpModule(compiler.Module);
+
+						Console.WriteLine("Finished");
+
+						string msg;
+
+                        LLVMSharp.LLVM.PrintModuleToFile(compiler.Module, "out.ll", out msg);
+
+						/*
                         compiler.Compile();
                         using (StreamWriter writer = new StreamWriter($"{Path.GetFileNameWithoutExtension(file)}.cpp")) 
                         {
