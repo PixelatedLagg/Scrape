@@ -22,6 +22,8 @@ namespace Scrape
                         
                         LLVMCompiler compiler;
 
+						Console.WriteLine("Compiling");
+
                         using (StreamReader reader = new StreamReader(file)) 
                         {
                             compiler = new LLVMCompiler(reader.ReadToEnd());

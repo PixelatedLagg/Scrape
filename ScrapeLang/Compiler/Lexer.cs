@@ -127,7 +127,7 @@ namespace Scrape
         }
 
 		private bool IsOp(char c) {
-			return c == '+' || c == '=' || c == '-' || c == '*' || c == '/';
+			return c == '+' || c == '=' || c == '-' || c == '*' || c == '/' || c == '<' || c == '>';
         }
 
 		private void SkipSpace() {

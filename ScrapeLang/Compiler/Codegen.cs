@@ -8,12 +8,16 @@ namespace Scrape.Code.Generation {
 
     public class TypeInfo {
         public string Name;
+		
+		public Expr TypeExpr;
 
         public bool Static;
 
         public bool Namespace;
 
         public bool Method;
+
+		public List<TypeInfo> Arguments = new List<TypeInfo>();
 
         public bool Class;
 
@@ -55,6 +59,8 @@ namespace Scrape.Code.Generation {
         public Dictionary<string, TypeInfo> Classes = new Dictionary<string, TypeInfo>();
 
 		public Dictionary<string, LLVMTypeRef> LLVMTypes = new Dictionary<string, LLVMTypeRef>();
+
+		public List<TypeInfo> Constructors = new List<TypeInfo>();
 
         public void DefineNamespace(string name, TypeInfo info) {
             Namespaces[name] = info;
@@ -205,7 +211,7 @@ namespace Scrape.Code.Generation {
 			}
 
 			if (expr.Type == ExprType.Call) {
-				TypeInfo method = Context.GetMethod(expr.Value.String());
+				TypeInfo method = expr.Value != null ? Context.GetMethod(expr.Value.String()) : DeduceType(expr.Subject);
 
 				if (method == null) {
 					throw new Exception("Method not found: " + expr.Value.String());
@@ -230,22 +236,31 @@ namespace Scrape.Code.Generation {
 				}
 			}
 
+			if (expr.Type == ExprType.Index) {
+				TypeInfo subject = DeduceType(expr.Subject);
+
+				return subject;
+			}
+
 			return null;
 		}
 
 		private TypeInfo GetType(Expr typepath) {
 			//TypeInfo result = null;
 
-			if (typepath.Value.String() == "int") {
-				return new TypeInfo {
-					Name = "int"
-				};
-			}
 
-			if (typepath.Value.String() == "string") {
-				return new TypeInfo {
-					Name = "string"
-				};
+			if (typepath.Value != null) {
+				if (typepath.Value.String() == "int") {
+					return new TypeInfo {
+						Name = "int"
+					};
+				}
+
+				if (typepath.Value.String() == "string") {
+					return new TypeInfo {
+						Name = "string"
+					};
+				}
 			}
 
 			if (typepath.Left == null) {
@@ -411,6 +426,8 @@ namespace Scrape.Code.Generation {
             Context.DefineVar(member.Name, new TypeInfo {
                 Name = member.TypeName,
 
+				TypeExpr = member.TypeExpr,
+
 				FieldIndex = Context.Variables.Count,
 
 				InitialValue = member.Expression,
@@ -418,7 +435,7 @@ namespace Scrape.Code.Generation {
                 Static = member.Modifiers.Contains("static")
             });
 
-            LLVMTypeRef type = TypeNameToLLVMType(member.TypeName);
+            LLVMTypeRef type = TypeExprToLLVMType(member.TypeExpr);
 
 			if (Context.GetClass(member.TypeName) != null)
 				return LLVM.PointerType(type, 0);
@@ -438,23 +455,40 @@ namespace Scrape.Code.Generation {
 				args.Add(TypeExprToLLVMType(arg));
 			}
 
-			LLVMTypeRef fntype = LLVM.FunctionType(TypeNameToLLVMType(member.TypeName), args.ToArray(), false);
+			LLVMTypeRef fntype = LLVM.FunctionType(TypeExprToLLVMType(member.TypeExpr), args.ToArray(), false);
 
-			LLVMValueRef fn = LLVM.AddFunction(Module, member.Name, fntype);
+			LLVMValueRef fn = LLVM.AddFunction(Module, member.Name == Context.Name ? $"{member.Name}_{Context.Constructors.Count}" : member.Name, fntype);
 
 			LLVMValueRef prev = Function;
 
 			Function = fn;
 
-            Context.DefineMethod(member.Name, new TypeInfo {
-                Name = member.TypeName,
+			if (member.Name == Context.Name) {
+				TypeInfo type = new TypeInfo {
+					Name = member.TypeName,
 
-                Static = member.Modifiers.Contains("static"),
+					Static = member.Modifiers.Contains("static"),
 
-                Method = true,
+					Method = true,
 
-				LLVMValue = fn
-            });
+					LLVMValue = fn
+				};
+
+				Context.DefineMethod($"{member.Name}_{Context.Constructors.Count}", type);
+
+				Context.Constructors.Add(type);
+			}
+			else {
+				Context.DefineMethod(member.Name, new TypeInfo {
+					Name = member.TypeName,
+
+					Static = member.Modifiers.Contains("static"),
+
+					Method = true,
+
+					LLVMValue = fn
+				});
+			}
 
             Context = new Scope(Context, ScopeType.Method);
 
@@ -500,6 +534,11 @@ namespace Scrape.Code.Generation {
                 Statement(builder, st);
             }
 
+			// Auto return void functions
+			if (member.TypeName == "void") {
+				LLVM.BuildRetVoid(builder);
+			}
+
 			Console.WriteLine("Added fn: " + member.Name);
 
 			// LLVM.DisposeBuilder(builder);
@@ -521,9 +560,13 @@ namespace Scrape.Code.Generation {
             }
 
             if (st.Type == StmtType.Assignment) {
-				TypeInfo tinfo = GetType(st.Path);
+				// TypeInfo tinfo = GetType(st.Path);
 
-                LLVMValueRef subject = tinfo.LLVMValue;
+                LLVMValueRef subject = Expression(builder, st.Path, true);
+
+				/*if (subject.Pointer == IntPtr.Zero) {
+					subject = Expression(builder, st.Path);
+				}*/
 
 				LLVM.BuildStore(builder, Expression(builder, st.Expression), subject);
             }
@@ -574,6 +617,30 @@ namespace Scrape.Code.Generation {
 				LLVM.PositionBuilderAtEnd(builder, end);
 			}
 
+			if (st.Type == StmtType.For) {
+				LLVMBasicBlockRef block = LLVM.AppendBasicBlock(Function, "for");
+
+				LLVMBuilderRef builder2 = LLVM.CreateBuilderInContext(Context.LLVMContext);
+
+				LLVM.PositionBuilderAtEnd(builder2, block);
+
+				Statement(builder, st.Initializer);
+
+				foreach (Stmt stmt in st.Body) {
+					Statement(builder2, stmt);
+				}
+
+				Statement(builder2, st.Increment);
+
+				LLVMBasicBlockRef end = LLVM.AppendBasicBlock(Function, "end");
+
+				LLVM.BuildCondBr(builder, Expression(builder, st.Condition), block, end);
+
+				LLVM.BuildCondBr(builder2, Expression(builder2, st.Condition), block, end);
+
+				LLVM.PositionBuilderAtEnd(builder, end);
+			}
+
             if (st.Type == StmtType.VarDef) {
                 TypeInfo type = Context.GetClass(st.TypeName);
 
@@ -590,7 +657,7 @@ namespace Scrape.Code.Generation {
                 string tname = st.TypeName;
 
                 if (tname != DeduceType(st.Expression).Name) {
-                    throw new Exception($"Type mismatch in variable definition (assigning '{DeduceType(st.Expression).Name}' to '{tname}')");
+                    //throw new Exception($"Type mismatch in variable definition (assigning '{DeduceType(st.Expression).Name}' to '{tname}')");
                 }
 
 				LLVMTypeRef typeref = Context.GetClass(tname) != null ? LLVM.PointerType(TypeExprToLLVMType(st.TypeExpr), 0) : TypeExprToLLVMType(st.TypeExpr);
@@ -613,9 +680,12 @@ namespace Scrape.Code.Generation {
 
 		LLVMValueRef TempObject;
 
-		public LLVMValueRef Expression(LLVMBuilderRef builder, Expr expr) {
+		// Setting noload to true will return references to variables instead of loading them
+		public LLVMValueRef Expression(LLVMBuilderRef builder, Expr expr, bool noload = false) {
             if (expr.Type == ExprType.New) {
 				TypeInfo type = Context.GetClass(expr.Subject.Value.String());
+
+				// TODO Allocate on heap instead of stack
 
                 LLVMValueRef ptr = LLVM.BuildAlloca(builder, TypeNameToLLVMType(expr.Subject.Value.String()), "stackobj");
 
@@ -645,6 +715,18 @@ namespace Scrape.Code.Generation {
 					}
 				}
 
+				if (type.Scope.Constructors.Count > 0) {
+					List<LLVMValueRef> args = new List<LLVMValueRef>();
+
+					args.Add(ptr);
+
+					foreach (Expr arg in expr.Args) {
+						args.Add(Expression(builder, arg));
+					}
+
+					LLVM.BuildCall(builder, LLVM.GetNamedFunction(Module, $"{type.Name}_0"), args.ToArray(), "new");
+				}
+
 				return ptr;
             }
 
@@ -669,6 +751,14 @@ namespace Scrape.Code.Generation {
 					return LLVM.BuildICmp(builder, LLVMIntPredicate.LLVMIntEQ, Expression(builder, expr.Left), Expression(builder, expr.Right), "eq");
 				}
 
+				if (expr.Op.String() == ">") {
+					return LLVM.BuildICmp(builder, LLVMIntPredicate.LLVMIntSGT, Expression(builder, expr.Left), Expression(builder, expr.Right), "gt");
+				}
+
+				if (expr.Op.String() == "<") {
+					return LLVM.BuildICmp(builder, LLVMIntPredicate.LLVMIntSLT, Expression(builder, expr.Left), Expression(builder, expr.Right), "lt");
+				}
+
 				if (expr.Op.String() == ".") {
 					TypeInfo tinfo = DeduceType(expr.Left);
 
@@ -684,7 +774,8 @@ namespace Scrape.Code.Generation {
 
 					LLVMValueRef ptr = Expression(builder, expr.Left);
 
-					ptr.Dump();
+					if (noload)
+						return LLVM.BuildStructGEP(builder, ptr, (uint) right.FieldIndex, right.Name);
 
 					return LLVM.BuildLoad(builder, LLVM.BuildStructGEP(builder, ptr, (uint) right.FieldIndex, right.Name), "field");
 				}
@@ -697,6 +788,7 @@ namespace Scrape.Code.Generation {
 
 				LLVMValueRef fn = Expression(builder, expr.Subject);
 
+				// Pass this pointer
 				if (! type.Static) {
 					if (TempObject.Pointer != IntPtr.Zero)
 						args.Add(TempObject);
@@ -714,13 +806,22 @@ namespace Scrape.Code.Generation {
             }
 
 			if (expr.Type == ExprType.Index) {
+				Console.WriteLine($"Index ${expr.Subject.Type}");
+
 				LLVMValueRef ptr = Expression(builder, expr.Subject);
+
+				Console.WriteLine("Index");
 
 				LLVMValueRef index = Expression(builder, expr.Index);
 
-				return LLVM.BuildLoad(builder, LLVM.BuildGEP(builder, ptr, new LLVMValueRef[] {
+				ptr = LLVM.BuildGEP(builder, ptr, new LLVMValueRef[] {
 					index
-				}, "index_gep"), "index_load");
+				}, "index_gep");
+
+				if (noload)
+					return ptr;
+
+				return LLVM.BuildLoad(builder, ptr, "index_load");
 			}
 
             if (expr.Type == ExprType.Literal) {
@@ -744,6 +845,9 @@ namespace Scrape.Code.Generation {
 					}
 
 					if (tinfo != null && tinfo.Argument)
+						return tinfo.LLVMValue;
+
+					if (noload)
 						return tinfo.LLVMValue;
 
 					return LLVM.BuildLoad(builder, tinfo.LLVMValue, "load");

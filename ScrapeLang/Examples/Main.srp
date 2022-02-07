@@ -1,25 +1,27 @@
 using StandardLib;
 
 namespace Program {
-	class Other {
-		int member = 30;
-	}
+	class String {
+		extern static char[0] malloc(int size);
 
-	class TestClass {
-		int i = 15;
+		string data;
 
-		string str = "Wow!\n";
+		string Substr(int start, int end) {
+			char[0] s = malloc(end - start);
 
-		string o = "Tet";
+			int pos = 0;
 
-		Other nest = new Other();
+			for (int i = start; i < end; i = i + 1) {
+				s[pos] = this.data[i];
 
-		int Inst(int ii) {
-			return this.i + ii;
+				pos = pos + 1;
+			}
+
+			return s;
 		}
 
-		int Instance() {
-			return Inst(2);
+		void String(string str) {
+			this.data = str;
 		}
 	}
 
@@ -29,21 +31,9 @@ namespace Program {
 		extern static void abort();
 
         public static int main(int argc, char[0][0] argv) {
-			TestClass test = new TestClass();
+			String str = new String("1234567890");
 
-			int i = 3;
-
-			int g = 1;
-
-			while (g == 1) {
-				i = i - 1;
-
-				puts("Loop");
-
-				if (i == 0) {
-					g = 0;
-				}
-			}
+			puts(str.Substr(1, 6));
 
 			return 0;
         }
