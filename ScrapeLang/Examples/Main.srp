@@ -1,13 +1,34 @@
 using StandardLib;
 
 namespace Program {
+	class Other {
+		int i = 130;
+		
+		void Other() {
+			
+		}
+	}
+	
+	class Test {
+		int i = 150;
+		int w = 300;
+
+		Other other = new Other();
+
+		void Test(int ival) {
+			this.i = ival;
+		}
+	}
+
 	class String {
-		extern static char[0] malloc(int size);
+		extern static char* malloc(int size);
 
 		string data;
 
+		int refc = 0;
+
 		string Substr(int start, int end) {
-			char[0] s = malloc(end - start);
+			char* s = malloc(end - start);
 
 			int pos = 0;
 
@@ -28,12 +49,32 @@ namespace Program {
     class ExampleClass {
 		extern static int puts(string message);
 
+		extern static void printf(string format, long ptr);
+
 		extern static void abort();
 
-        public static int main(int argc, char[0][0] argv) {
-			String str = new String("1234567890");
+		extern static char* malloc(int size);
 
-			puts(str.Substr(1, 6));
+		extern static void IncRef(char* obj);
+
+		extern static void DecRef(char* obj);
+
+		int refc;
+
+		public static int test(String obj) {
+			String r = obj;
+
+			r.refc = 15;
+
+			return 0;
+		}
+
+		extern static void VisitGCRoots();
+
+        public static int main(int argc, char** argv) {
+			Test t = new Test(0);
+
+			t = new Test(1);
 
 			return 0;
         }

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Scrape.Code.Generation;
+using System.Runtime.InteropServices;
 
 namespace Scrape
 {

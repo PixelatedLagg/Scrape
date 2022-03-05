@@ -1,17 +1,17 @@
-CXX = g++
+CXX = gcc
 
 INCLUDE = ./Include
 SRC = ./Source
 
-OBJS = $(patsubst $(SRC)/%.cpp,%.o,$(wildcard $(SRC)/*.cpp))
+OBJS = $(patsubst $(SRC)/%.c,%.o,$(wildcard $(SRC)/*.c))
 
 %.o:
-	$(CXX) $(SRC)/$(patsubst %.o,%,$@).cpp -c -I$(INCLUDE) -o obj/$(patsubst %.o,%,$@).o -fPIC
+	$(CXX) $(SRC)/$(patsubst %.o,%,$@).c -c -I$(INCLUDE) -o obj/$(patsubst %.o,%,$@).o -fPIC
 
-$(SRC)/%.cpp: $(patsubst %.cpp,%,$@).o
+$(SRC)/%.cpp: $(patsubst %.c,%,$@).o
 
 all: $(OBJS)
-	$(CXX) obj/*.o -o bin/libscrape.so -shared -fPIC
+	
 
 clean:
 	rm -rf obj	

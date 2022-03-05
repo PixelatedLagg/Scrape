@@ -28,6 +28,8 @@ namespace Scrape {
 
 		public int ArrayDepth;
 
+		public int PointerDepth;
+
 		public List<int> ArrayLengths = new List<int>();
 
 		public List<Expr> Args;
@@ -548,6 +550,59 @@ namespace Scrape {
 
 			int pos = Source.Position;
 
+			try {
+				Expr type = Type();
+
+				if (Source.PeekToken(2).Type == TokenType.Semicolon) {
+					result.Type = StmtType.VarDef;
+
+					result.TypeName = type.Subject.Value.String();
+
+					result.TypeExpr = type;
+
+					result.Name = Source.GetToken().String();
+
+					result.Expression = Expression();
+				}
+
+				if (Source.PeekToken(2).Is(TokenType.Operator, "=")) {
+					/*if (type.Type != TokenType.Identifier) {
+						throw new SyntaxError("Expected identifier", type);
+					}*/
+
+					Token name = Source.GetToken();
+
+					if (name.Type != TokenType.Identifier) {
+						throw new SyntaxError("Expected identifier", name);
+					}
+
+					Source.GetToken(); // =
+
+					result.Type = StmtType.VarDef;
+
+					result.TypeName = type.Subject.Value.String();
+
+					result.TypeExpr = type;
+
+					result.Name = name.String();
+
+					result.Expression = Expression();
+
+					if (Source.PeekToken().Type != TokenType.Semicolon) {
+						throw new SyntaxError("Expected [;] after statement", Source.PeekToken());
+					}
+
+					Source.GetToken(); // ;
+
+					return result;
+				}
+			}
+			catch (SyntaxError) {
+				
+			}
+
+			Source.Position = pos;
+			
 			Expr path = Expression();
 
 			if (Source.PeekToken().Is(TokenType.Operator, "=")) {
@@ -569,54 +624,6 @@ namespace Scrape {
 
 				if (Source.PeekToken().Type != TokenType.RParen)
 					Source.GetToken(); // ;
-
-				return result;
-			}
-
-			Source.Position = pos;
-
-			Expr type = Type();
-
-			if (Source.PeekToken(2).Type == TokenType.Semicolon) {
-				result.Type = StmtType.VarDef;
-
-				result.TypeName = type.Subject.Value.String();
-
-				result.TypeExpr = type;
-
-				result.Name = Source.GetToken().String();
-
-				result.Expression = Expression();
-			}
-
-			if (Source.PeekToken(2).Is(TokenType.Operator, "=")) {
-				/*if (type.Type != TokenType.Identifier) {
-					throw new SyntaxError("Expected identifier", type);
-				}*/
-
-				Token name = Source.GetToken();
-
-				if (name.Type != TokenType.Identifier) {
-					throw new SyntaxError("Expected identifier", name);
-				}
-
-				Source.GetToken(); // =
-
-				result.Type = StmtType.VarDef;
-
-				result.TypeName = type.Subject.Value.String();
-
-				result.TypeExpr = type;
-
-				result.Name = name.String();
-
-				result.Expression = Expression();
-
-				if (Source.PeekToken().Type != TokenType.Semicolon) {
-					throw new SyntaxError("Expected [;] after statement", Source.PeekToken());
-				}
-
-				Source.GetToken(); // ;
 
 				return result;
 			}
@@ -709,10 +716,24 @@ namespace Scrape {
 
 			result.Subject = Expression(true);
 
+			while (Source.PeekToken().Is(TokenType.Operator, "*")) {
+				Source.GetToken(); // *
+
+				result.PointerDepth++;
+			}
+
 			while (Source.PeekToken().Type == TokenType.LBrace) {
 				Source.GetToken(); // [
 
-				result.ArrayLengths.Add(Primary().Value.Integer());
+				Token index = Source.GetToken();
+
+				if (index.Type != TokenType.Integer) {
+					DisableIndexing = false;
+
+					throw new SyntaxError("Expected integer", index);
+				}
+
+				result.ArrayLengths.Add(index.Integer());
 
 				Source.GetToken(); // ]
 
@@ -900,6 +921,9 @@ namespace Scrape {
 						Operands.Push(new Expr(Operands.Pop(), Operators.Pop().ToToken(), right));
 					}
 				}
+
+				if (dot && op.Op == "*")
+					break;
 
 				Source.GetToken();
 

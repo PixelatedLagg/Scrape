@@ -160,6 +160,10 @@ namespace Scrape
 			return str;
 		}
 
+		private List<string> Ops = new List<string>() {
+			"+", "-", "*", "/", "=", "<", ">", ".", "=="
+		};
+
 		public Token GetToken() {
 			SkipSpace();
 
@@ -299,7 +303,17 @@ namespace Scrape
             }
 
 			if (IsOp(c)) {
-				return new Token(TokenType.Operator, Line, Column, ReadWhile(IsOp));
+				int pos = Position;
+
+				string op = ReadWhile(IsOp);
+
+				if (Ops.Contains(op)) {
+					return new Token(TokenType.Operator, Line, Column, op);
+				}
+				
+				Position = pos;
+
+				return new Token(TokenType.Operator, Line, Column, Get().ToString());
 			}
 
 			return new Token(TokenType.EOF, Line, Column, null);
