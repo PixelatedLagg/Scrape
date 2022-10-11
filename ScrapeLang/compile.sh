@@ -1,7 +1,0 @@
-cp object.o ../ScrapeRuntime/obj
-
-cd ../ScrapeRuntime && make
-
-cd obj
-
-ld -dynamic-linker /lib64/ld-linux-x86-64.so.2 /usr/lib/x86_64-linux-gnu/crt1.o /usr/lib/x86_64-linux-gnu/crti.o -lc *.o /usr/lib/x86_64-linux-gnu/crtn.o -o ../../ScrapeLang/a.out

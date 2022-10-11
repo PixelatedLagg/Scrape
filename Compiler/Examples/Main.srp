@@ -1,0 +1,18 @@
+use STDLIB;
+
+set Program
+{
+	null Main()
+	{
+		Console.OutLine("Hello, World!");
+		Console.Out("Enter a number: ");
+		int a = Console.InLine();
+		Console.Out("Enter another number: ");
+		int b = Console.InLine();
+		Console.OutLine($"{a} + {b} = {Add(a, b)}");
+	}
+	int Add(int a, int b)
+	{
+		return a + b;
+	}
+}
